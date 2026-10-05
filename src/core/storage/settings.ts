@@ -8,6 +8,7 @@
 
 import { StorageConfig, EncryptedBlob } from "../types";
 import { ChromeStorage } from "./chrome-storage";
+import { Locale, normalizeLocale } from "../../shared/i18n";
 import {
   DEFAULT_MAX_CONCURRENT,
   DEFAULT_FFMPEG_TIMEOUT_MS,
@@ -26,6 +27,7 @@ import {
 } from "../../shared/constants";
 
 export interface AppSettings {
+  language: Locale;
   ffmpegTimeout: number;
   maxConcurrent: number;
   historyEnabled: boolean;
@@ -74,6 +76,7 @@ export async function loadSettings(): Promise<AppSettings> {
   const raw = await ChromeStorage.get<StorageConfig>(STORAGE_CONFIG_KEY);
 
   return {
+    language: normalizeLocale(raw?.language),
     ffmpegTimeout: raw?.ffmpegTimeout ?? DEFAULT_FFMPEG_TIMEOUT_MS,
     maxConcurrent: raw?.maxConcurrent ?? DEFAULT_MAX_CONCURRENT,
     historyEnabled: raw?.historyEnabled ?? true,

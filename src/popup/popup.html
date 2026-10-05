@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="i18n-pending">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -856,13 +856,13 @@
   <div class="header">
     <span class="header-title">Media Bridge</span>
     <div class="header-actions">
-      <button id="historyBtn" class="header-btn" title="History">
+      <button id="historyBtn" class="header-btn" title="History" data-i18n-title="nav.history">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"></circle>
           <polyline points="12 6 12 12 16 14"></polyline>
         </svg>
       </button>
-      <button id="themeToggle" class="header-btn" title="Toggle theme">
+      <button id="themeToggle" class="header-btn" title="Toggle theme" data-i18n-title="theme.toggle">
         <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="5"></circle>
           <line x1="12" y1="1" x2="12" y2="3"></line>
@@ -875,7 +875,7 @@
           <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
         </svg>
       </button>
-      <button id="settingsBtn" class="header-btn" title="Settings">
+      <button id="settingsBtn" class="header-btn" title="Settings" data-i18n-title="nav.settings">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
           <circle cx="12" cy="12" r="3"></circle>
@@ -887,9 +887,9 @@
   <!-- Tabs -->
   <div class="tabs">
     <div class="seg-tabs" style="margin-bottom:0;">
-      <button id="autoDetectTab" class="seg-tab active" data-tab="auto">Videos</button>
-      <button id="manifestTab" class="seg-tab" data-tab="manual" title="Download from manifest links of HLS or DASH streaming protocols">Manifest</button>
-      <button id="downloadsTab" class="seg-tab" data-tab="downloads">Downloads</button>
+      <button id="autoDetectTab" class="seg-tab active" data-tab="auto" data-i18n="popup.videos">Videos</button>
+      <button id="manifestTab" class="seg-tab" data-tab="manual" title="Download from manifest links of HLS or DASH streaming protocols" data-i18n-title="popup.manifestTabTitle" data-i18n="popup.manifest">Manifest</button>
+      <button id="downloadsTab" class="seg-tab" data-tab="downloads" data-i18n="popup.downloads">Downloads</button>
     </div>
   </div>
 
@@ -900,12 +900,12 @@
     <!-- No Video Notice -->
     <div id="noVideoNotice" class="no-video-notice">
       <div class="no-video-notice-header">
-        <div class="no-video-notice-title">Can't see the media you're looking for?</div>
-        <button id="closeNoVideoNotice" class="notice-close" aria-label="Close">&times;</button>
+        <div class="no-video-notice-title" data-i18n="popup.noVideoTitle">Can't see the media you're looking for?</div>
+        <button id="closeNoVideoNotice" class="notice-close" aria-label="Close" data-i18n-aria-label="common.close">&times;</button>
       </div>
-      <p>Start the video (and skip ads if any) to help detect the media. Try turning off autoplay if videos aren't being detected.</p>
+      <p data-i18n="popup.noVideoBody">Start the video (and skip ads if any) to help detect the media. Try turning off autoplay if videos aren't being detected.</p>
       <div class="no-video-notice-actions">
-        <button id="forceDetectionBtn" class="primary-btn">Force detection</button>
+        <button id="forceDetectionBtn" class="primary-btn" data-i18n="popup.forceDetection">Force detection</button>
       </div>
     </div>
   </div>
@@ -914,43 +914,43 @@
   <div id="manifestContent" class="tab-content">
     <div class="manifest-form-area">
       <div class="manifest-input-group">
-        <input type="text" id="manifestUrlInput" placeholder="Enter manifest URL (.m3u8 or .mpd)">
-        <button id="loadHlsPlaylistBtn" class="primary-btn">Load</button>
+        <input type="text" id="manifestUrlInput" placeholder="Enter manifest URL (.m3u8 or .mpd)" data-i18n-placeholder="popup.manifestUrlPlaceholder">
+        <button id="loadHlsPlaylistBtn" class="primary-btn" data-i18n="common.load">Load</button>
       </div>
       <div id="hlsMediaPlaylistWarning" class="warning-card" style="display: none;">
-        <strong>Media Playlist Detected</strong>
-        <p>This URL belongs to a media playlist. Quality selection is not available. The download will proceed with the available stream.</p>
+        <strong data-i18n="popup.mediaPlaylistTitle">Media Playlist Detected</strong>
+        <p data-i18n="popup.mediaPlaylistBody">This URL belongs to a media playlist. Quality selection is not available. The download will proceed with the available stream.</p>
       </div>
       <div id="hlsLiveStreamInfo" class="warning-card warning-live" style="display: none;">
-        <strong>Live Stream Detected</strong>
+        <strong data-i18n="popup.liveTitle">Live Stream Detected</strong>
         <p id="hlsLiveStreamInfoText"></p>
       </div>
       <div id="hlsDrmWarning" class="warning-card warning-drm" style="display: none;">
-        <strong>DRM Protected Content</strong>
-        <p>This content is protected by DRM (Digital Rights Management) and cannot be downloaded.</p>
+        <strong data-i18n="popup.drmTitle">DRM Protected Content</strong>
+        <p data-i18n="popup.drmBody">This content is protected by DRM (Digital Rights Management) and cannot be downloaded.</p>
       </div>
       <div id="hlsUnsupportedWarning" class="warning-card warning-drm" style="display: none;">
-        <strong>Unsupported Encryption</strong>
-        <p>This content uses an unsupported encryption method. Only AES-128 or unencrypted content can be downloaded.</p>
+        <strong data-i18n="popup.unsupportedTitle">Unsupported Encryption</strong>
+        <p data-i18n="popup.unsupportedBody">This content uses an unsupported encryption method. Only AES-128 or unencrypted content can be downloaded.</p>
       </div>
       <div id="hlsQualitySelection" style="display: none;">
         <div class="hls-quality-form-group">
-          <label for="videoQualitySelect">Video Quality</label>
+          <label for="videoQualitySelect" data-i18n="popup.videoQuality">Video Quality</label>
           <select id="videoQualitySelect" class="hls-quality-select">
-            <option value="">Select video quality...</option>
+            <option value="" data-i18n="popup.selectVideoQuality">Select video quality...</option>
           </select>
         </div>
         <div class="hls-quality-form-group">
-          <label for="audioQualitySelect">Audio Quality</label>
+          <label for="audioQualitySelect" data-i18n="popup.audioQuality">Audio Quality</label>
           <select id="audioQualitySelect" class="hls-quality-select">
-            <option value="">Select audio quality...</option>
+            <option value="" data-i18n="popup.selectAudioQuality">Select audio quality...</option>
           </select>
         </div>
       </div>
       <div id="manifestProgress" style="display: none; padding: 12px; background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--radius-md); margin-top: var(--space-5);"></div>
     </div>
     <div class="manifest-download-footer">
-      <button id="startHlsDownloadBtn" class="primary-btn" disabled>Download</button>
+      <button id="startHlsDownloadBtn" class="primary-btn" disabled data-i18n="common.download">Download</button>
     </div>
   </div>
 

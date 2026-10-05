@@ -16,7 +16,8 @@ import {
   getStatusText,
   getVideoTitleFromUrl,
 } from "./utils";
-import { canCancelDownload, CANNOT_CANCEL_MESSAGE } from "../core/utils/download-utils";
+import { canCancelDownload } from "../core/utils/download-utils";
+import { t, translateRuntimeMessage } from "../shared/i18n";
 
 // SVG play icon for no-thumbnail state
 const PLAY_ICON_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
@@ -54,7 +55,7 @@ function updateDownloadCardProgress(card: HTMLElement, download: DownloadState):
     if (!bar || !sizeEl) return false;
     const pct = download.progress.percentage || 0;
     bar.style.width = `${Math.min(pct, 100)}%`;
-    sizeEl.textContent = download.progress.message || "Uploading...";
+    sizeEl.textContent = translateRuntimeMessage(download.progress.message || t("downloads.uploading"));
     return true;
   }
 
@@ -70,7 +71,7 @@ function updateDownloadCardProgress(card: HTMLElement, download: DownloadState):
     if (!sizeEl) return false;
     const segmentsCollected = download.progress.segmentsCollected || 0;
     const downloaded = download.progress.downloaded || 0;
-    sizeEl.textContent = `${segmentsCollected} segments \u2022 ${formatFileSize(downloaded)}`;
+    sizeEl.textContent = t("progress.segments", { count: segmentsCollected, size: formatFileSize(downloaded) });
     return true;
   }
 
@@ -100,7 +101,7 @@ function updateDownloadCardProgress(card: HTMLElement, download: DownloadState):
     if (!bar || !sizeEl) return false;
 
     const percentage = Math.min(Math.max(download.progress.percentage || 0, 0), 100);
-    const message = download.progress.message || "Merging streams...";
+    const message = translateRuntimeMessage(download.progress.message || t("downloads.merging"));
 
     bar.style.width = `${percentage}%`;
     sizeEl.textContent = message;
@@ -136,7 +137,7 @@ function createSectionHeader(label: string, count: number, showClear = false): H
   if (showClear) {
     const clearBtn = document.createElement("button");
     clearBtn.className = "section-clear-btn";
-    clearBtn.textContent = "Clear all";
+    clearBtn.textContent = t("downloads.clearAll");
     header.appendChild(clearBtn);
   }
 
@@ -198,7 +199,7 @@ function renderDownloadItem(download: DownloadState): string {
           <div class="manifest-progress-bar" style="width: ${Math.min(pct, 100)}%"></div>
         </div>
         <div class="manifest-progress-info">
-          <span class="manifest-progress-size">${download.progress.message || "Uploading..."}</span>
+          <span class="manifest-progress-size">${translateRuntimeMessage(download.progress.message || t("downloads.uploading"))}</span>
           <span class="manifest-progress-speed">${pct > 0 ? `${Math.round(pct)}%` : ""}</span>
         </div>
       </div>
@@ -213,8 +214,8 @@ function renderDownloadItem(download: DownloadState): string {
           <div class="manifest-progress-bar recording"></div>
         </div>
         <div class="manifest-progress-info">
-          <span class="manifest-progress-size">${segmentsCollected} segments &bull; ${formatFileSize(downloaded)}</span>
-          <span class="rec-badge"><span class="rec-dot"></span>REC</span>
+          <span class="manifest-progress-size">${t("progress.segments", { count: segmentsCollected, size: formatFileSize(downloaded) })}</span>
+          <span class="rec-badge"><span class="rec-dot"></span>${t("videos.rec")}</span>
         </div>
       </div>
     `;
@@ -238,7 +239,7 @@ function renderDownloadItem(download: DownloadState): string {
         </div>
       `;
     } else if (stage === DownloadStage.MERGING) {
-      const message = download.progress.message || "Merging streams...";
+      const message = translateRuntimeMessage(download.progress.message || t("downloads.merging"));
       const mergingPercentage = Math.min(Math.max(percentage, 0), 100);
 
       progressBar = `
@@ -292,17 +293,17 @@ function renderDownloadItem(download: DownloadState): string {
     const parts: string[] = [];
 
     if (driveLink) {
-      parts.push(`<a class="btn-cloud-link" href="${escapeHtml(driveLink)}" target="_blank" rel="noopener" title="View in Google Drive">&#x2197; Drive</a>`);
+      parts.push(`<a class="btn-cloud-link" href="${escapeHtml(driveLink)}" target="_blank" rel="noopener" title="${t("downloads.driveLink")}">&#x2197; Drive</a>`);
     }
     if (s3Link) {
-      parts.push(`<button class="btn-cloud-link btn-copy-s3" data-s3-url="${escapeHtml(s3Link)}" title="Copy S3 URL">&#x29C9; S3 URL</button>`);
+      parts.push(`<button class="btn-cloud-link btn-copy-s3" data-s3-url="${escapeHtml(s3Link)}" title="${t("downloads.copyS3")}">${t("downloads.s3Url")}</button>`);
     }
     // Deferred upload / retry button (shown when no cloud links yet)
     if (!driveLink && !s3Link) {
-      const label = uploadError ? "&#x21BA; Retry upload" : "&#x2B06; Upload";
+      const label = uploadError ? t("downloads.retryUpload") : t("downloads.upload");
       const title = uploadError
-        ? `Upload failed: ${escapeHtml(uploadError)} — click to retry`
-        : "Upload to cloud storage";
+        ? t("downloads.uploadFailedRetry", { error: escapeHtml(uploadError) })
+        : t("downloads.uploadTitle");
       parts.push(`<button class="btn-upload-deferred" data-download-id="${escapeHtml(download.id)}" title="${title}">${label}</button>`);
     }
 
@@ -315,7 +316,7 @@ function renderDownloadItem(download: DownloadState): string {
   if (isRecording) {
     actionButtons = `
       <div class="card-actions">
-        <button class="btn-stop-rec download-stop-rec-btn" data-url="${escapeHtml(download.url)}">Stop</button>
+        <button class="btn-stop-rec download-stop-rec-btn" data-url="${escapeHtml(download.url)}">${t("videos.stop")}</button>
       </div>
     `;
   } else if (isUploading) {
@@ -325,7 +326,7 @@ function renderDownloadItem(download: DownloadState): string {
     if (!canCancelDownload(download.progress.stage)) {
       actionButtons = `
         <div class="card-actions">
-          <button class="video-btn download-remove-btn" data-download-id="${escapeHtml(download.id)}" disabled title="${CANNOT_CANCEL_MESSAGE}" style="opacity: 0.4; cursor: not-allowed;">Cancel</button>
+          <button class="video-btn download-remove-btn" data-download-id="${escapeHtml(download.id)}" disabled title="${t("downloads.cannotCancelTitle")}" style="opacity: 0.4; cursor: not-allowed;">${t("common.cancel")}</button>
         </div>
       `;
     } else {
@@ -336,7 +337,7 @@ function renderDownloadItem(download: DownloadState): string {
         download.metadata.format === VideoFormat.DASH;
       actionButtons = `
         <div class="card-actions">
-          ${isDownloading && isManifestType ? `<button class="btn-stop-save" data-action="stop-save" data-url="${escapeHtml(download.metadata.url)}" title="Stop & Save">Stop &amp; Save</button>` : `<button class="video-btn-manifest download-remove-btn" data-download-id="${escapeHtml(download.id)}">Cancel</button>`}
+          ${isDownloading && isManifestType ? `<button class="btn-stop-save" data-action="stop-save" data-url="${escapeHtml(download.metadata.url)}" title="${t("videos.stopAndSave")}">${t("videos.stopAndSave")}</button>` : `<button class="video-btn-manifest download-remove-btn" data-download-id="${escapeHtml(download.id)}">${t("common.cancel")}</button>`}
         </div>
       `;
     }
@@ -346,7 +347,7 @@ function renderDownloadItem(download: DownloadState): string {
     <div class="download-item">
       <div class="video-item-preview">
         ${download.metadata.thumbnail
-          ? `<img src="${escapeHtml(download.metadata.thumbnail)}" alt="Video preview" loading="lazy">`
+          ? `<img src="${escapeHtml(download.metadata.thumbnail)}" alt="${t("videos.previewAlt")}" loading="lazy">`
           : `<div class="no-thumbnail">${PLAY_ICON_SVG}</div>`
         }
       </div>
@@ -398,8 +399,8 @@ export function renderDownloads(forceFullRebuild = false): void {
           <polyline points="7 10 12 15 17 10"></polyline>
           <line x1="12" y1="15" x2="12" y2="3"></line>
         </svg>
-        <div class="empty-state-title">No downloads yet</div>
-        <div class="empty-state-subtitle">Start downloading videos from the Videos tab or load a manifest URL.</div>
+        <div class="empty-state-title">${t("downloads.empty")}</div>
+        <div class="empty-state-subtitle">${t("downloads.emptyBody")}</div>
       </div>
     `;
     renderedDownloadCards.clear();
@@ -431,7 +432,7 @@ export function renderDownloads(forceFullRebuild = false): void {
   renderedDownloadCards.clear();
 
   const sections: Array<{ label: string; items: DownloadState[]; showClear: boolean }> = [];
-  if (inProgress.length > 0) sections.push({ label: "In Progress", items: inProgress, showClear: false });
+  if (inProgress.length > 0) sections.push({ label: t("downloads.inProgress"), items: inProgress, showClear: false });
 
   for (const section of sections) {
     const sectionEl = createSectionHeader(section.label, section.items.length, section.showClear);

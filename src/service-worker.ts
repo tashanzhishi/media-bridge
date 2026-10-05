@@ -19,6 +19,7 @@ import { ChromeStorage } from "./core/storage/chrome-storage";
 import { loadSettings } from "./core/storage/settings";
 import { SecureStorage } from "./core/storage/secure-storage";
 import { MessageType, CloudProvider } from "./shared/messages";
+import { t, setLocale } from "./shared/i18n";
 import {
   DownloadState,
   StorageConfig,
@@ -952,8 +953,9 @@ function sendDownloadComplete(downloadId: string): void {
 
 async function handlePostDownloadActions(downloadId: string): Promise<void> {
   try {
-    const { notifications } = await loadSettings();
+    const { notifications, language } = await loadSettings();
     if (!notifications.notifyOnCompletion && !notifications.autoOpenFile) return;
+    setLocale(language);
 
     const state = await getDownload(downloadId);
     if (!state) return;
@@ -965,7 +967,7 @@ async function handlePostDownloadActions(downloadId: string): Promise<void> {
       chrome.notifications.create(`download-complete-${downloadId}`, {
         type: "basic",
         iconUrl: "icons/icon-48.png",
-        title: "Download complete",
+        title: t("notification.downloadComplete"),
         message: `${title}\n${filename}`,
       });
     }

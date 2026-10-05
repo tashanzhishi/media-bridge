@@ -6,7 +6,8 @@ import { VideoMetadata, DownloadStage } from "../core/types";
 import { getDownload, deleteDownload } from "../core/database/downloads";
 import { storeChunk } from "../core/database/chunks";
 import { MessageType, CloudProvider } from "../shared/messages";
-import { canCancelDownload, CANNOT_CANCEL_MESSAGE } from "../core/utils/download-utils";
+import { canCancelDownload } from "../core/utils/download-utils";
+import { t } from "../shared/i18n";
 import { loadDownloadStates } from "./state";
 import { renderDownloads } from "./render-downloads";
 import { renderDetectedVideos } from "./render-videos";
@@ -15,13 +16,13 @@ export async function handleOpenDownload(downloadId: string): Promise<void> {
   try {
     const download = await getDownload(downloadId);
     if (!download || !download.localPath) {
-      alert("Download file not found");
+      alert(t("error.fileNotFound"));
       return;
     }
 
     const filename = download.localPath.split(/[/\\]/).pop();
     if (!filename) {
-      alert("Could not determine filename");
+      alert(t("error.filenameUnknown"));
       return;
     }
 
@@ -38,7 +39,7 @@ export async function handleOpenDownload(downloadId: string): Promise<void> {
     }
   } catch (error) {
     console.error("Failed to open download:", error);
-    alert("Failed to open download file");
+    alert(t("error.openFailed"));
   }
 }
 
@@ -54,11 +55,11 @@ export async function handleRemoveDownload(downloadId: string): Promise<void> {
 
     if (isInProgress) {
       if (!canCancelDownload(download.progress.stage)) {
-        alert(CANNOT_CANCEL_MESSAGE);
+        alert(t("error.cannotCancel"));
         return;
       }
 
-      if (!confirm("Are you sure you want to cancel this download?")) return;
+      if (!confirm(t("actions.cancelConfirm"))) return;
 
       try {
         const response = await new Promise<any>((resolve, reject) => {
@@ -86,10 +87,10 @@ export async function handleRemoveDownload(downloadId: string): Promise<void> {
         }
       } catch (error: any) {
         console.error("Failed to cancel download:", error);
-        alert("Failed to cancel download: " + (error?.message || "Unknown error"));
+        alert(t("error.cancelFailed", { error: error?.message || t("common.unknownError") }));
       }
     } else {
-      if (!confirm("Are you sure you want to remove this download?")) return;
+      if (!confirm(t("actions.removeConfirm"))) return;
 
       await deleteDownload(downloadId);
       await loadDownloadStates();
@@ -97,7 +98,7 @@ export async function handleRemoveDownload(downloadId: string): Promise<void> {
     }
   } catch (error) {
     console.error("Failed to remove download:", error);
-    alert("Failed to remove download");
+    alert(t("error.removeFailed"));
   }
 }
 
@@ -105,7 +106,7 @@ export async function handleRetryDownload(downloadId: string): Promise<void> {
   try {
     const download = await getDownload(downloadId);
     if (!download) {
-      alert("Download not found");
+      alert(t("error.downloadNotFound"));
       return;
     }
 
@@ -154,7 +155,7 @@ export async function handleRetryDownload(downloadId: string): Promise<void> {
     }
   } catch (error: any) {
     console.error("Failed to retry download:", error);
-    alert("Failed to retry download: " + (error?.message || "Unknown error"));
+    alert(t("error.retryFailed", { error: error?.message || t("common.unknownError") }));
   }
 }
 
@@ -169,24 +170,24 @@ export async function handleUploadDownload(downloadId: string, provider: CloudPr
   try {
     const download = await getDownload(downloadId);
     if (!download) {
-      alert("Download record not found.");
+      alert(t("actions.uploadRecordNotFound"));
       return;
     }
     if (download.metadata.hasDrm) {
-      alert("DRM-protected content cannot be uploaded.");
+      alert(t("actions.drmUpload"));
       return;
     }
 
     // @ts-ignore — showOpenFilePicker is available in Chrome extension popups
     const [fileHandle] = await (window as any).showOpenFilePicker({
       multiple: false,
-      types: [{ description: "Video files", accept: { "video/*": [".mp4", ".webm", ".mkv", ".mov"] } }],
+      types: [{ description: t("filePicker.videoFiles"), accept: { "video/*": [".mp4", ".webm", ".mkv", ".mov"] } }],
     });
 
     const file: File = await fileHandle.getFile();
 
     if (!file.type.startsWith('video/')) {
-      alert(`Invalid file type "${file.type}". Please select a video file.`);
+      alert(t("history.invalidFileType", { type: file.type }));
       return;
     }
 
@@ -215,12 +216,12 @@ export async function handleUploadDownload(downloadId: string, provider: CloudPr
       await loadDownloadStates();
       renderDownloads();
     } else {
-      alert("Upload failed: " + (response?.error || "Unknown error"));
+      alert(t("history.uploadFailed", { error: response?.error || t("common.unknownError") }));
     }
   } catch (err: any) {
     if (err?.name === "AbortError") return; // user cancelled file picker
     console.error("Upload failed:", err);
-    alert("Upload failed: " + (err?.message || "Unknown error"));
+    alert(t("history.uploadFailed", { error: err?.message || t("common.unknownError") }));
   }
 }
 
@@ -234,7 +235,7 @@ export async function startDownload(
   if (triggerButton) {
     triggerButton.disabled = true;
     triggerButton.classList.add("disabled");
-    triggerButton.textContent = "Starting...";
+    triggerButton.textContent = t("common.starting");
   }
 
   let shouldResetButton = false;
@@ -246,9 +247,7 @@ export async function startDownload(
           "Extension context invalidated",
         )
       ) {
-        alert(
-          "Extension was reloaded. Please refresh this page and try again.",
-        );
+        alert(t("actions.invalidatedRefresh"));
         shouldResetButton = true;
         return;
       }
@@ -290,14 +289,12 @@ export async function startDownload(
             const errorMessage = chrome.runtime.lastError.message || "";
             if (errorMessage.includes("Extension context invalidated")) {
               reject(
-                new Error(
-                  "Extension context invalidated. Please reload the extension and try again.",
-                ),
+                new Error(t("actions.invalidatedReload")),
               );
               return;
             }
             reject(
-              new Error(chrome.runtime.lastError.message || "Unknown error"),
+              new Error(chrome.runtime.lastError.message || t("common.unknownError")),
             );
             return;
           }
@@ -306,9 +303,7 @@ export async function startDownload(
       );
     }).catch((error: any) => {
       if (error?.message?.includes("Extension context invalidated")) {
-        throw new Error(
-          "Extension context invalidated. Please reload the extension and try again.",
-        );
+        throw new Error(t("actions.invalidatedReload"));
       }
       throw error;
     });
@@ -336,18 +331,16 @@ export async function startDownload(
         "Extension context invalidated",
       )
     ) {
-      alert(
-        "Extension was reloaded. Please close and reopen this popup, then try again.",
-      );
+      alert(t("actions.invalidatedPopup"));
     } else {
-      alert("Failed to start download: " + (error?.message || "Unknown error"));
+      alert(t("actions.startFailed", { error: error?.message || t("common.unknownError") }));
     }
     shouldResetButton = true;
   } finally {
     if (shouldResetButton && triggerButton && triggerButton.isConnected) {
       triggerButton.disabled = false;
       triggerButton.classList.remove("disabled");
-      triggerButton.textContent = originalText || "Download";
+      triggerButton.textContent = originalText || t("videos.download");
     }
   }
 }

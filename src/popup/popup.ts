@@ -8,6 +8,7 @@ import { MessageType } from "../shared/messages";
 import { normalizeUrl } from "../core/utils/url-utils";
 import { ChromeStorage } from "../core/storage/chrome-storage";
 import { loadSettings } from "../core/storage/settings";
+import { t, initI18n, revealDocument } from "../shared/i18n";
 import { CloudProvider } from "../shared/messages";
 import {
   dom,
@@ -76,7 +77,7 @@ async function handleForceDetection(): Promise<void> {
   if (!btn) return;
   const originalText = btn.textContent;
   btn.disabled = true;
-  btn.textContent = "Refreshing...";
+  btn.textContent = t("common.refreshing");
 
   try {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -101,10 +102,10 @@ async function handleForceDetection(): Promise<void> {
     window.close();
   } catch (error) {
     console.error("Failed to refresh tab for force detection:", error);
-    alert("Failed to refresh the page. Please try again.");
+    alert(t("error.refreshFailed"));
   } finally {
     btn.disabled = false;
-    btn.textContent = originalText || "Force detection";
+    btn.textContent = originalText || t("popup.forceDetection");
   }
 }
 
@@ -387,7 +388,7 @@ function setupDownloadsEventDelegation(): void {
       const s3Enabled = settings.s3?.enabled === true;
 
       if (!driveEnabled && !s3Enabled) {
-        alert('No cloud provider configured. Go to Settings → Google Drive or S3.');
+        alert(t("error.noProviderPopup"));
         return;
       }
 
@@ -438,13 +439,13 @@ function setupDownloadsEventDelegation(): void {
       `;
 
       const driveBtn = document.createElement('button');
-      driveBtn.textContent = '↑ Google Drive';
+      driveBtn.textContent = t("upload.providerGoogleDrive");
       driveBtn.style.cssText = btnStyle;
       driveBtn.addEventListener('mouseenter', () => { driveBtn.style.background = 'var(--hover-bg, #313244)'; });
       driveBtn.addEventListener('mouseleave', () => { driveBtn.style.background = 'none'; });
 
       const s3Btn = document.createElement('button');
-      s3Btn.textContent = '↑ S3';
+      s3Btn.textContent = t("upload.providerS3");
       s3Btn.style.cssText = btnStyle;
       s3Btn.addEventListener('mouseenter', () => { s3Btn.style.background = 'var(--hover-bg, #313244)'; });
       s3Btn.addEventListener('mouseleave', () => { s3Btn.style.background = 'none'; });
@@ -482,8 +483,8 @@ function setupDownloadsEventDelegation(): void {
       const s3Url = copyS3Btn.dataset.s3Url;
       if (s3Url) {
         await navigator.clipboard.writeText(s3Url);
-        copyS3Btn.textContent = "Copied!";
-        setTimeout(() => { copyS3Btn.textContent = "⧉ S3 URL"; }, 2000);
+        copyS3Btn.textContent = t("common.copied");
+        setTimeout(() => { copyS3Btn.textContent = t("upload.copyS3Url"); }, 2000);
       }
       return;
     }
@@ -493,6 +494,14 @@ function setupDownloadsEventDelegation(): void {
 // ---- Initialization ----
 
 async function init(): Promise<void> {
+  try {
+    const settings = await loadSettings();
+    initI18n(settings.language);
+  } catch (err) {
+    console.error("Failed to initialize i18n:", err);
+    revealDocument();
+  }
+
   // Initialize DOM elements
   dom.forceDetectionBtn = document.getElementById("forceDetectionBtn") as HTMLButtonElement;
   dom.closeNoVideoNoticeBtn = document.getElementById("closeNoVideoNotice") as HTMLButtonElement;

@@ -6,6 +6,7 @@ import { DownloadState, VideoMetadata, VideoFormat, DownloadStage, Level } from 
 import { normalizeUrl } from "../core/utils/url-utils";
 import { formatFileSize } from "../core/utils/format-utils";
 import { MessageType } from "../shared/messages";
+import { t } from "../shared/i18n";
 import { downloadStates } from "./state";
 
 const MAX_URL_DISPLAY_LENGTH = 50;
@@ -22,18 +23,9 @@ export function getVideoTitleFromUrl(url: string): string {
 }
 
 export function getStatusText(stage: DownloadStage): string {
-  const statusMap: Record<DownloadStage, string> = {
-    [DownloadStage.DETECTING]: "Detecting",
-    [DownloadStage.DOWNLOADING]: "Downloading",
-    [DownloadStage.RECORDING]: "Recording",
-    [DownloadStage.MERGING]: "Merging",
-    [DownloadStage.SAVING]: "Saving",
-    [DownloadStage.UPLOADING]: "Uploading",
-    [DownloadStage.COMPLETED]: "Completed",
-    [DownloadStage.FAILED]: "Failed",
-    [DownloadStage.CANCELLED]: "Cancelled",
-  };
-  return statusMap[stage] || stage;
+  const key = `stage.${stage}`;
+  const translated = t(key);
+  return translated === key ? stage : translated;
 }
 
 export function getActualFileFormat(
@@ -84,7 +76,7 @@ export function getFormatDisplayName(
 export function getLinkTypeDisplayName(format: VideoFormat): string {
   switch (format) {
     case VideoFormat.DIRECT:
-      return "Direct";
+      return t("format.direct");
     case VideoFormat.HLS:
       return "HLS";
     case VideoFormat.M3U8:
@@ -179,7 +171,7 @@ export function formatQualityLabel(level: Level): string {
     parts.push(`${level.fps} fps`);
   }
 
-  return parts.length > 0 ? parts.join(" \u2022 ") : "Unknown";
+  return parts.length > 0 ? parts.join(" \u2022 ") : t("common.unknown");
 }
 
 export function getDownloadStateForVideo(

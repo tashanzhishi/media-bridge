@@ -92,6 +92,7 @@ export interface EncryptedBlob {
 }
 
 export interface StorageConfig {
+  language?: "en" | "zh"; // UI language; unset = follow the browser UI language
   googleDrive?: {
     enabled: boolean;
     targetFolderId?: string;
@@ -164,4 +165,3 @@ export interface Level {
   height?: number;
   width?: number;
 }
-

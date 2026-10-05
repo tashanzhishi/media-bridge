@@ -11,6 +11,13 @@ import { S3Client } from "../core/cloud/s3-client";
 import { StorageConfig, EncryptedBlob, DownloadState, DownloadStage, VideoMetadata } from "../core/types";
 import { MessageType, CloudProvider } from "../shared/messages";
 import {
+  t,
+  initI18n,
+  revealDocument,
+  detectDefaultLocale,
+  normalizeLocale,
+} from "../shared/i18n";
+import {
   getAllDownloads,
   getDownload,
   deleteDownload,
@@ -73,7 +80,15 @@ const FINISHED_STAGES = new Set([
 // Section: Init & Routing
 // ─────────────────────────────────────────────
 
-function init(): void {
+async function init(): Promise<void> {
+  try {
+    const settings = await loadSettings();
+    initI18n(settings.language);
+  } catch (err) {
+    console.error("Failed to initialize i18n:", err);
+    revealDocument();
+  }
+
   loadTheme();
   setupNavigation();
   setupThemeToggle();
@@ -208,19 +223,19 @@ async function saveDownloadSettings(): Promise<void> {
   if (maxConcurrent === null || timeoutSeconds === null) return;
 
   btn.disabled = true;
-  btn.textContent = "Saving…";
+  btn.textContent = t("common.saving");
 
   try {
     const config = (await ChromeStorage.get<StorageConfig>(STORAGE_CONFIG_KEY)) ?? {};
     config.ffmpegTimeout = timeoutSeconds * 1000;
     config.maxConcurrent = maxConcurrent;
     await ChromeStorage.set(STORAGE_CONFIG_KEY, config);
-    showStatus("Settings saved.", "success");
+    showStatus(t("common.settingsSaved"), "success");
   } catch (err) {
-    showStatus(`Save failed: ${errorMsg(err)}`, "error");
+    showStatus(t("common.saveFailed", { error: errorMsg(err) }), "error");
   } finally {
     btn.disabled = false;
-    btn.textContent = "Save Settings";
+    btn.textContent = t("common.save");
   }
 }
 
@@ -314,12 +329,12 @@ async function checkAuthStatus(): Promise<void> {
   const signOutBtn = document.getElementById("sign-out-btn") as HTMLButtonElement;
 
   if (isAuth) {
-    statusEl.textContent = "Authenticated";
+    statusEl.textContent = t("drive.authenticated");
     statusEl.className = "auth-status authenticated";
     authBtn.style.display = "none";
     signOutBtn.style.display = "inline-flex";
   } else {
-    statusEl.textContent = "Not Authenticated";
+    statusEl.textContent = t("drive.notAuthenticated");
     statusEl.className = "auth-status not-authenticated";
     authBtn.style.display = "inline-flex";
     signOutBtn.style.display = "none";
@@ -331,32 +346,32 @@ async function handleAuth(): Promise<void> {
   const clientIdIn = document.getElementById("drive-client-id") as HTMLInputElement;
   const clientId = clientIdIn.value.trim();
   if (!clientId) {
-    markInvalid(clientIdIn, "Enter your OAuth Client ID before signing in.");
+    markInvalid(clientIdIn, t("drive.enterClientId"));
     return;
   }
   btn.disabled = true;
-  btn.textContent = "Authenticating…";
+  btn.textContent = t("drive.authenticating");
   try {
     await GoogleAuth.setClientId(clientId);
     await GoogleAuth.authenticate(GOOGLE_DRIVE_SCOPES);
     await persistDriveSettings(true);
-    showStatus("Authenticated and settings saved.", "success");
+    showStatus(t("drive.authSuccess"), "success");
     await checkAuthStatus();
   } catch (err) {
-    showStatus(`Authentication failed: ${errorMsg(err)}`, "error");
+    showStatus(t("drive.authFailed", { error: errorMsg(err) }), "error");
   } finally {
     btn.disabled = false;
-    btn.textContent = "Sign in with Google";
+    btn.textContent = t("drive.signIn");
   }
 }
 
 async function handleSignOut(): Promise<void> {
   try {
     await GoogleAuth.signOut();
-    showStatus("Signed out.", "success");
+    showStatus(t("drive.signedOut"), "success");
     await checkAuthStatus();
   } catch (err) {
-    showStatus(`Sign out failed: ${errorMsg(err)}`, "error");
+    showStatus(t("drive.signOutFailed", { error: errorMsg(err) }), "error");
   }
 }
 
@@ -374,7 +389,7 @@ async function persistDriveSettings(enabledOverride?: boolean): Promise<boolean>
   const enabled = enabledOverride ?? enabledCb.checked;
   const clientId = clientIdIn.value.trim();
   if (enabled && !clientId) {
-    markInvalid(clientIdIn, "OAuth Client ID is required when Google Drive is enabled.");
+    markInvalid(clientIdIn, t("drive.clientIdRequired"));
     return false;
   }
 
@@ -396,16 +411,16 @@ async function persistDriveSettings(enabledOverride?: boolean): Promise<boolean>
 async function saveDriveSettings(): Promise<void> {
   const btn = document.getElementById("save-drive-settings") as HTMLButtonElement;
   btn.disabled = true;
-  btn.textContent = "Saving…";
+  btn.textContent = t("common.saving");
 
   try {
     if (!(await persistDriveSettings())) return;
-    showStatus("Settings saved.", "success");
+    showStatus(t("common.settingsSaved"), "success");
   } catch (err) {
-    showStatus(`Save failed: ${errorMsg(err)}`, "error");
+    showStatus(t("common.saveFailed", { error: errorMsg(err) }), "error");
   } finally {
     btn.disabled = false;
-    btn.textContent = "Save Settings";
+    btn.textContent = t("common.save");
   }
 }
 
@@ -443,7 +458,7 @@ async function loadS3Settings(): Promise<void> {
   // Show placeholder when secret key is stored encrypted
   if (s3.secretKeyEncrypted) {
     inp("s3-secret-key").value = "";
-    inp("s3-secret-key").placeholder = "••••••••  (encrypted — leave blank to keep)";
+    inp("s3-secret-key").placeholder = t("s3.encryptedPlaceholder");
   } else {
     inp("s3-secret-key").value = s3.secretAccessKey ?? "";
   }
@@ -486,8 +501,8 @@ async function loadS3Settings(): Promise<void> {
     const text = document.getElementById("s3-cors-json")?.textContent ?? "";
     await navigator.clipboard.writeText(text);
     const btn = document.getElementById("s3-copy-cors") as HTMLButtonElement;
-    btn.textContent = "Copied!";
-    setTimeout(() => { btn.textContent = "Copy CORS Config"; }, 2000);
+    btn.textContent = t("common.copied");
+    setTimeout(() => { btn.textContent = t("s3.copyCors"); }, 2000);
   });
 
   document.getElementById("s3-test-connection")?.addEventListener("click", testS3Connection);
@@ -498,7 +513,7 @@ async function testS3Connection(): Promise<void> {
   const btn = document.getElementById("s3-test-connection") as HTMLButtonElement;
   const resultEl = document.getElementById("s3-test-result") as HTMLSpanElement;
   btn.disabled = true;
-  btn.textContent = "Testing…";
+  btn.textContent = t("common.testing");
   resultEl.textContent = "";
   resultEl.style.color = "";
 
@@ -518,9 +533,9 @@ async function testS3Connection(): Promise<void> {
       if (s3.secretKeyEncrypted) {
         let passphrase = await SecureStorage.getPassphrase();
         if (!passphrase) {
-          passphrase = window.prompt("Enter your S3 encryption passphrase to test the connection:") ?? "";
+          passphrase = window.prompt(t("s3.testPrompt")) ?? "";
           if (!passphrase) {
-            resultEl.textContent = "Passphrase required to decrypt the stored secret key.";
+            resultEl.textContent = t("s3.passphraseRequired");
             resultEl.style.color = "var(--error)";
             return;
           }
@@ -529,7 +544,7 @@ async function testS3Connection(): Promise<void> {
           secretAccessKey = await SecureStorage.decrypt(s3.secretKeyEncrypted, passphrase);
           await SecureStorage.setPassphrase(passphrase);
         } catch {
-          resultEl.textContent = "✗ Wrong passphrase — could not decrypt secret key.";
+          resultEl.textContent = t("s3.wrongPassphrase");
           resultEl.style.color = "var(--error)";
           return;
         }
@@ -537,7 +552,7 @@ async function testS3Connection(): Promise<void> {
     }
 
     if (!bucket || !region || !accessKeyId || !secretAccessKey) {
-      resultEl.textContent = "Fill in bucket, region, and credentials first.";
+      resultEl.textContent = t("s3.fillCredentials");
       resultEl.style.color = "var(--error)";
       return;
     }
@@ -546,7 +561,7 @@ async function testS3Connection(): Promise<void> {
     const { ok, error } = await client.testConnection();
 
     if (ok) {
-      resultEl.textContent = "✓ Connection successful";
+      resultEl.textContent = t("s3.connectionSuccess");
       resultEl.style.color = "var(--success, #22c55e)";
     } else {
       resultEl.textContent = `✗ ${error}`;
@@ -557,14 +572,14 @@ async function testS3Connection(): Promise<void> {
     resultEl.style.color = "var(--error)";
   } finally {
     btn.disabled = false;
-    btn.textContent = "Test Connection";
+    btn.textContent = t("s3.testConnection");
   }
 }
 
 async function saveS3Settings(): Promise<void> {
   const btn = document.getElementById("save-s3-settings") as HTMLButtonElement;
   btn.disabled = true;
-  btn.textContent = "Saving…";
+  btn.textContent = t("common.saving");
 
   try {
     const get = (id: string) =>
@@ -577,7 +592,7 @@ async function saveS3Settings(): Promise<void> {
     const secretKeyRaw = get("s3-secret-key");
 
     if (passphrase && passphrase !== passphraseConfirm) {
-      showStatus("Passphrases do not match.", "error");
+      showStatus(t("s3.passphrasesNoMatch"), "error");
       return;
     }
 
@@ -624,12 +639,12 @@ async function saveS3Settings(): Promise<void> {
 
     // Reload fields so encrypted placeholder appears
     await loadS3Settings();
-    showStatus("Settings saved.", "success");
+    showStatus(t("common.settingsSaved"), "success");
   } catch (err) {
-    showStatus(`Save failed: ${errorMsg(err)}`, "error");
+    showStatus(t("common.saveFailed", { error: errorMsg(err) }), "error");
   } finally {
     btn.disabled = false;
-    btn.textContent = "Save Settings";
+    btn.textContent = t("common.save");
   }
 }
 
@@ -947,7 +962,7 @@ function renderHistoryItem(state: DownloadState): HTMLElement {
   const badges = document.createElement("div");
   badges.className = "history-badges";
   badges.appendChild(makeBadge(state.metadata.format, "badge-format"));
-  if (state.metadata.isLive) badges.appendChild(makeBadge("live", "badge-live"));
+  if (state.metadata.isLive) badges.appendChild(makeBadge(t("badge.live"), "badge-live"));
   if (state.metadata.resolution || state.metadata.quality) {
     badges.appendChild(
       makeBadge((state.metadata.resolution || state.metadata.quality)!, "badge-resolution"),
@@ -956,7 +971,7 @@ function renderHistoryItem(state: DownloadState): HTMLElement {
   badges.appendChild(makeStageBadge(state.progress.stage));
   
   if (state.cloudLinks?.googleDrive || state.cloudLinks?.s3) {
-    badges.appendChild(makeBadge("uploaded", "badge-uploaded"));
+    badges.appendChild(makeBadge(t("badge.uploaded"), "badge-uploaded"));
   }
   
   info.appendChild(badges);
@@ -978,13 +993,13 @@ function renderHistoryItem(state: DownloadState): HTMLElement {
     const pct = state.progress.percentage || 0;
     const progressEl = document.createElement("div");
     progressEl.className = "history-upload-progress";
-    progressEl.title = `Uploading... ${Math.round(pct)}%`;
+    progressEl.title = t("progress.uploadingPercent", { pct: Math.round(pct) });
     progressEl.innerHTML = iconUploadProgress(pct);
     actions.appendChild(progressEl);
 
     const cancelBtn = document.createElement("button");
     cancelBtn.className = "history-cancel-upload";
-    cancelBtn.title = "Cancel upload";
+    cancelBtn.title = t("history.cancelUpload");
     cancelBtn.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${iconX()}</svg>`;
     cancelBtn.addEventListener("click", () => cancelUpload(state.id));
     actions.appendChild(cancelBtn);
@@ -996,7 +1011,7 @@ function renderHistoryItem(state: DownloadState): HTMLElement {
 
   const menuBtn = document.createElement("button");
   menuBtn.className = "history-menu-btn";
-  menuBtn.title = "Actions";
+  menuBtn.title = t("history.actions");
   menuBtn.textContent = "···";
 
   const menu = document.createElement("div");
@@ -1033,7 +1048,7 @@ function renderHistoryItem(state: DownloadState): HTMLElement {
   // Open file (completed with known path only)
   if (state.progress.stage === DownloadStage.COMPLETED && state.localPath) {
     const localPath = state.localPath;
-    menu.appendChild(makeMenuItem(iconFolder(), "Open file", async () => {
+    menu.appendChild(makeMenuItem(iconFolder(), t("history.openFile"), async () => {
       const filename = localPath.split(/[/\\]/).pop();
       if (!filename) return;
       const results = await new Promise<chrome.downloads.DownloadItem[]>((resolve) =>
@@ -1049,24 +1064,24 @@ function renderHistoryItem(state: DownloadState): HTMLElement {
 
   // Upload to cloud (completed only, not while uploading)
   if (state.progress.stage === DownloadStage.COMPLETED && !state.metadata.hasDrm) {
-    const uploadLabel = state.uploadError ? "Retry upload" : "Upload to cloud";
+    const uploadLabel = state.uploadError ? t("history.retryUpload") : t("history.uploadToCloud");
     menu.appendChild(makeMenuItem(iconUpload(), uploadLabel, () => handleHistoryUpload(state.id)));
   }
 
   // Cancel upload (while uploading)
   if (state.progress.stage === DownloadStage.UPLOADING) {
-    menu.appendChild(makeMenuItem(iconX(), "Cancel upload", () => cancelUpload(state.id)));
+    menu.appendChild(makeMenuItem(iconX(), t("history.cancelUpload"), () => cancelUpload(state.id)));
   }
 
-  menu.appendChild(makeMenuItem(iconDownload(), "Re-download", () => redownload(state.url, state.metadata)));
-  menu.appendChild(makeMenuItem(iconCopy(), "Copy URL", async () => {
+  menu.appendChild(makeMenuItem(iconDownload(), t("history.redownload"), () => redownload(state.url, state.metadata)));
+  menu.appendChild(makeMenuItem(iconCopy(), t("history.copyUrl"), async () => {
     await navigator.clipboard.writeText(state.url);
-    showToast("URL copied to clipboard", "success");
+    showToast(t("history.urlCopied"), "success");
   }));
 
-  menu.appendChild(makeMenuItem(iconLink(), "Check manifest", () => checkManifest(state.url)));
+  menu.appendChild(makeMenuItem(iconLink(), t("history.checkManifest"), () => checkManifest(state.url)));
 
-  menu.appendChild(makeMenuItem(iconTrash(), "Delete", async () => {
+  menu.appendChild(makeMenuItem(iconTrash(), t("history.delete"), async () => {
     // Cancel upload first if one is in progress for this item
     if (state.progress.stage === DownloadStage.UPLOADING) {
       await cancelUpload(state.id);
@@ -1124,7 +1139,7 @@ function makeStageBadge(stage: DownloadStage): HTMLElement {
     [DownloadStage.CANCELLED]: "badge-cancelled",
     [DownloadStage.UPLOADING]: "badge-completed",
   };
-  return makeBadge(stage, map[stage] ?? "");
+  return makeBadge(t(`stage.${stage}`), map[stage] ?? "");
 }
 
 
@@ -1134,7 +1149,7 @@ function syncBulkBar(): void {
   const selectAll = document.getElementById("select-all") as HTMLInputElement;
 
   bar.classList.toggle("visible", selectedIds.size > 0);
-  count.textContent = `${selectedIds.size} selected`;
+  count.textContent = t("history.selected", { count: selectedIds.size });
 
   const visible = applyFilters(allHistory);
   selectAll.checked = visible.length > 0 && visible.every((d) => selectedIds.has(d.id));
@@ -1143,16 +1158,16 @@ function syncBulkBar(): void {
 }
 
 async function cancelUpload(downloadId: string): Promise<void> {
-  if (!confirm("Are you sure you want to cancel this upload?")) return;
+  if (!confirm(t("history.cancelUploadConfirm"))) return;
   try {
     await chrome.runtime.sendMessage({
       type: MessageType.CANCEL_UPLOAD,
       payload: { downloadId },
     });
-    showToast("Upload cancelled", "warning");
+    showToast(t("history.uploadCancelled"), "warning");
     await fetchAndRenderHistory();
   } catch (err: any) {
-    showToast("Failed to cancel upload: " + (err?.message || "Unknown error"), "error");
+    showToast(t("history.cancelUploadFailed", { error: err?.message || t("common.unknownError") }), "error");
   }
 }
 
@@ -1162,7 +1177,7 @@ async function handleHistoryUpload(downloadId: string): Promise<void> {
   const s3Enabled = settings.s3?.enabled === true;
 
   if (!driveEnabled && !s3Enabled) {
-    showToast("No cloud provider configured. Go to Cloud Providers settings.", "error");
+    showToast(t("history.noProvider"), "error");
     return;
   }
 
@@ -1179,7 +1194,7 @@ async function handleHistoryUpload(downloadId: string): Promise<void> {
 
       const dialog = document.createElement("div");
       dialog.style.cssText = "background:var(--bg-secondary,#1e1e2e);border:1px solid var(--border-color,#3a3a5c);border-radius:8px;padding:20px;min-width:220px;text-align:center;";
-      dialog.innerHTML = `<div style="margin-bottom:12px;font-weight:500;color:var(--text-primary,#cdd6f4);">Choose provider</div>`;
+      dialog.innerHTML = `<div style="margin-bottom:12px;font-weight:500;color:var(--text-primary,#cdd6f4);">${t("history.chooseProvider")}</div>`;
 
       const btnStyle = "display:block;width:100%;padding:8px 12px;margin-top:8px;border:1px solid var(--border-color,#3a3a5c);border-radius:6px;background:var(--bg-primary,#11111b);color:var(--text-primary,#cdd6f4);cursor:pointer;font-size:13px;";
 
@@ -1209,21 +1224,21 @@ async function handleHistoryUpload(downloadId: string): Promise<void> {
   try {
     const [fileHandle] = await (window as any).showOpenFilePicker({
       multiple: false,
-      types: [{ description: "Video files", accept: { "video/*": [".mp4", ".webm", ".mkv", ".mov"] } }],
+      types: [{ description: t("filePicker.videoFiles"), accept: { "video/*": [".mp4", ".webm", ".mkv", ".mov"] } }],
     });
     file = await fileHandle.getFile();
   } catch (err: any) {
     if (err?.name === "AbortError") return;
-    showToast("Failed to select file", "error");
+    showToast(t("history.selectFileFailed"), "error");
     return;
   }
 
   if (!file.type.startsWith("video/")) {
-    showToast(`Invalid file type "${file.type}". Select a video file.`, "error");
+    showToast(t("history.invalidFileType", { type: file.type }), "error");
     return;
   }
 
-  showToast("Uploading…", "warning");
+  showToast(t("history.uploading"), "warning");
 
   try {
     // Store file bytes in IDB — chrome.runtime.sendMessage uses JSON
@@ -1247,13 +1262,13 @@ async function handleHistoryUpload(downloadId: string): Promise<void> {
       );
     });
     if (response?.success) {
-      showToast("Upload complete", "success");
+      showToast(t("history.uploadComplete"), "success");
       await fetchAndRenderHistory();
     } else {
-      showToast("Upload failed: " + (response?.error || "Unknown error"), "error");
+      showToast(t("history.uploadFailed", { error: response?.error || t("common.unknownError") }), "error");
     }
   } catch (err: any) {
-    showToast("Upload failed: " + (err?.message || "Unknown error"), "error");
+    showToast(t("history.uploadFailed", { error: err?.message || t("common.unknownError") }), "error");
   }
 }
 
@@ -1272,10 +1287,10 @@ async function redownload(url: string, metadata?: VideoMetadata): Promise<void> 
       payload: { url, metadata: resolvedMetadata, tabTitle: metadata?.title, website },
     });
     if (response?.error) return showToast(response.error, "error");
-    showToast(isLive ? "Recording started" : "Download queued", "success");
+    showToast(isLive ? t("history.recordingStarted") : t("history.downloadQueued"), "success");
     await fetchAndRenderHistory();
   } catch {
-    showToast("Failed to start download", "error");
+    showToast(t("history.startDownloadFailed"), "error");
   }
 }
 
@@ -1303,7 +1318,7 @@ function showToast(message: string, type: "success" | "error" | "warning"): void
 }
 
 async function checkManifest(url: string): Promise<void> {
-  showToast("Checking…", "warning");
+  showToast(t("history.checking"), "warning");
 
   const result = await chrome.runtime.sendMessage({
     type: MessageType.CHECK_URL,
@@ -1311,11 +1326,11 @@ async function checkManifest(url: string): Promise<void> {
   });
 
   if (!result || result.status === 0) {
-    showToast("Manifest unreachable or CORS blocked", "warning");
+    showToast(t("history.manifestUnreachable"), "warning");
   } else if (result.ok) {
-    showToast("Manifest is live", "success");
+    showToast(t("history.manifestLive"), "success");
   } else {
-    showToast(`Manifest returned ${result.status}`, "error");
+    showToast(t("history.manifestReturned", { status: result.status }), "error");
   }
 }
 
@@ -1351,8 +1366,8 @@ function validateField(
     markInvalid(
       input,
       isNaN(val)
-        ? "Must be a number"
-        : `Must be between ${lo} and ${hi}`,
+        ? t("validate.mustBeNumber")
+        : t("validate.mustBeBetween", { lo, hi }),
     );
     return null;
   }
@@ -1403,10 +1418,10 @@ function truncateUrl(url: string, max = 60): string {
 
 function relativeTime(ts: number): string {
   const diff = Date.now() - ts;
-  if (diff < 60_000) return "just now";
-  if (diff < 3600_000) return `${Math.floor(diff / 60_000)}m ago`;
-  if (diff < MS_PER_DAY) return `${Math.floor(diff / 3_600_000)}h ago`;
-  return `${Math.floor(diff / MS_PER_DAY)}d ago`;
+  if (diff < 60_000) return t("time.justNow");
+  if (diff < 3600_000) return t("time.minutesAgo", { n: Math.floor(diff / 60_000) });
+  if (diff < MS_PER_DAY) return t("time.hoursAgo", { n: Math.floor(diff / 3_600_000) });
+  return t("time.daysAgo", { n: Math.floor(diff / MS_PER_DAY) });
 }
 
 // ─────────────────────────────────────────────
@@ -1509,12 +1524,12 @@ async function saveRecordingSettings(): Promise<void> {
   if (pollMinS === null || pollMaxS === null || pollFraction === null) return;
 
   if (pollMinS >= pollMaxS) {
-    markInvalid(get("poll-min"), "Must be less than the maximum poll interval");
+    markInvalid(get("poll-min"), t("recording.pollMinMax"));
     return;
   }
 
   btn.disabled = true;
-  btn.textContent = "Saving…";
+  btn.textContent = t("common.saving");
 
   try {
     const config = (await ChromeStorage.get<StorageConfig>(STORAGE_CONFIG_KEY)) ?? {};
@@ -1524,12 +1539,12 @@ async function saveRecordingSettings(): Promise<void> {
       pollFraction,
     };
     await ChromeStorage.set(STORAGE_CONFIG_KEY, config);
-    showStatus("Settings saved.", "success");
+    showStatus(t("common.settingsSaved"), "success");
   } catch (err) {
-    showStatus(`Save failed: ${errorMsg(err)}`, "error");
+    showStatus(t("common.saveFailed", { error: errorMsg(err) }), "error");
   } finally {
     btn.disabled = false;
-    btn.textContent = "Save Settings";
+    btn.textContent = t("common.save");
   }
 }
 
@@ -1554,7 +1569,7 @@ async function loadNotificationSettings(): Promise<void> {
 async function saveNotificationSettings(): Promise<void> {
   const btn = document.getElementById("save-notification-settings") as HTMLButtonElement;
   btn.disabled = true;
-  btn.textContent = "Saving…";
+  btn.textContent = t("common.saving");
 
   try {
     const notifyCb = document.getElementById("notify-on-completion") as HTMLInputElement;
@@ -1566,12 +1581,12 @@ async function saveNotificationSettings(): Promise<void> {
       autoOpenFile: autoOpenCb.checked,
     };
     await ChromeStorage.set(STORAGE_CONFIG_KEY, config);
-    showStatus("Settings saved.", "success");
+    showStatus(t("common.settingsSaved"), "success");
   } catch (err) {
-    showStatus(`Save failed: ${errorMsg(err)}`, "error");
+    showStatus(t("common.saveFailed", { error: errorMsg(err) }), "error");
   } finally {
     btn.disabled = false;
-    btn.textContent = "Save Settings";
+    btn.textContent = t("common.save");
   }
 }
 
@@ -1580,7 +1595,7 @@ async function saveNotificationSettings(): Promise<void> {
 // ─────────────────────────────────────────────
 
 async function loadAdvancedSettings(): Promise<void> {
-  const { advanced } = await loadSettings();
+  const { advanced, language } = await loadSettings();
 
   const get = (id: string) => document.getElementById(id) as HTMLInputElement;
 
@@ -1591,6 +1606,9 @@ async function loadAdvancedSettings(): Promise<void> {
   get("detection-cache-size").value = advanced.detectionCacheSize.toString();
   get("master-playlist-cache-size").value = advanced.masterPlaylistCacheSize.toString();
   get("db-sync-interval").value = (advanced.dbSyncIntervalMs / 1000).toString();
+
+  const languageSel = document.getElementById("ui-language") as HTMLSelectElement | null;
+  if (languageSel) languageSel.value = language;
 
   for (const id of ["save-advanced-settings", "save-advanced-settings-caches", "save-advanced-settings-perf"]) {
     document.getElementById(id)?.addEventListener("click", saveAdvancedSettings);
@@ -1620,11 +1638,17 @@ async function saveAdvancedSettings(event?: Event): Promise<void> {
     failureRatePct === null || detectionCache === null || masterCache === null || dbSyncS === null
   ) return;
 
+  const languageSel = document.getElementById("ui-language") as HTMLSelectElement | null;
+  const language = normalizeLocale(languageSel?.value);
+  const previousLanguage = (await loadSettings()).language;
+  const languageChanged = language !== previousLanguage;
+
   btn.disabled = true;
-  btn.textContent = "Saving…";
+  btn.textContent = t("common.saving");
 
   try {
     const config = (await ChromeStorage.get<StorageConfig>(STORAGE_CONFIG_KEY)) ?? {};
+    config.language = language;
     config.advanced = {
       maxRetries,
       retryDelayMs:          retryDelayS * 1000,
@@ -1635,12 +1659,15 @@ async function saveAdvancedSettings(event?: Event): Promise<void> {
       dbSyncIntervalMs:      dbSyncS * 1000,
     };
     await ChromeStorage.set(STORAGE_CONFIG_KEY, config);
-    showStatus("Settings saved.", "success");
+    showStatus(
+      languageChanged ? t("common.settingsSavedReload") : t("common.settingsSaved"),
+      "success",
+    );
   } catch (err) {
-    showStatus(`Save failed: ${errorMsg(err)}`, "error");
+    showStatus(t("common.saveFailed", { error: errorMsg(err) }), "error");
   } finally {
     btn.disabled = false;
-    btn.textContent = "Save Settings";
+    btn.textContent = t("common.save");
   }
 }
 
@@ -1652,6 +1679,7 @@ async function resetAdvancedSettings(event?: Event): Promise<void> {
   try {
     const config = (await ChromeStorage.get<StorageConfig>(STORAGE_CONFIG_KEY)) ?? {};
     delete config.advanced;
+    delete config.language;
     await ChromeStorage.set(STORAGE_CONFIG_KEY, config);
 
     // Re-render inputs with defaults
@@ -1664,9 +1692,12 @@ async function resetAdvancedSettings(event?: Event): Promise<void> {
     get("master-playlist-cache-size").value = DEFAULT_MASTER_PLAYLIST_CACHE_SIZE.toString();
     get("db-sync-interval").value = (DEFAULT_DB_SYNC_INTERVAL_MS / 1000).toString();
 
-    showStatus("Reset to defaults.", "success");
+    const languageSel = document.getElementById("ui-language") as HTMLSelectElement | null;
+    if (languageSel) languageSel.value = detectDefaultLocale();
+
+    showStatus(t("common.resetDone"), "success");
   } catch (err) {
-    showStatus(`Reset failed: ${errorMsg(err)}`, "error");
+    showStatus(t("common.resetFailed", { error: errorMsg(err) }), "error");
   } finally {
     btn.disabled = false;
   }

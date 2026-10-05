@@ -8,6 +8,7 @@ import { parseMasterPlaylist, isMasterPlaylist, isMediaPlaylist } from "../core/
 import { hasDrm, canDecrypt } from "../core/utils/drm-utils";
 import { MpdParser } from "../core/parsers/mpd-parser";
 import { MessageType } from "../shared/messages";
+import { t } from "../shared/i18n";
 import {
   dom,
   loadDownloadStates,
@@ -101,7 +102,7 @@ export function updateManualManifestFormState(): void {
   const audioSelected = audioQualitySelect.value !== "";
 
   startManifestDownloadBtn.disabled = !(videoSelected || audioSelected);
-  startManifestDownloadBtn.textContent = isLiveManifest ? "Record" : "Download";
+  startManifestDownloadBtn.textContent = isLiveManifest ? t("common.record") : t("common.download");
 }
 
 export function updateDownloadButtonState(): void {
@@ -126,7 +127,7 @@ export async function handleLoadManifestPlaylist(): Promise<void> {
   const rawUrl = manifestUrlInput.value.trim();
 
   if (!rawUrl) {
-    alert("Please enter a manifest URL");
+    alert(t("manifest.enterUrl"));
     return;
   }
 
@@ -134,14 +135,14 @@ export async function handleLoadManifestPlaylist(): Promise<void> {
 
   const format = detectFormatFromUrl(normalizedUrl);
   if (format !== VideoFormat.HLS && format !== VideoFormat.DASH) {
-    alert("Please enter a valid manifest URL (.m3u8 or .mpd)");
+    alert(t("manifest.invalidUrl"));
     return;
   }
 
   manifestUrlInput.value = normalizedUrl;
 
   loadManifestPlaylistBtn.disabled = true;
-  loadManifestPlaylistBtn.textContent = "Loading...";
+  loadManifestPlaylistBtn.textContent = t("common.loading");
 
   if (dom.manifestMediaPlaylistWarning) dom.manifestMediaPlaylistWarning.style.display = "none";
   if (dom.manifestLiveStreamInfo) dom.manifestLiveStreamInfo.style.display = "none";
@@ -196,14 +197,14 @@ export async function handleLoadManifestPlaylist(): Promise<void> {
           videoQualitySelect.selectedIndex = 0;
           videoQualitySelect.disabled = false;
           // Audio is always auto-included for DASH
-          audioQualitySelect.innerHTML = '<option value="">Auto (included)</option>';
+          audioQualitySelect.innerHTML = `<option value="">${t("manifest.autoIncluded")}</option>`;
           audioQualitySelect.disabled = true;
         }
         if (dom.manifestLiveStreamInfo) {
           dom.manifestLiveStreamInfo.style.display = live ? "block" : "none";
           if (live) {
             const infoText = document.getElementById("hlsLiveStreamInfoText");
-            if (infoText) infoText.textContent = "This is a live DASH stream. Select a quality and click Record to start capturing.";
+            if (infoText) infoText.textContent = t("manifest.liveDashSelectQuality");
           }
         }
       } else {
@@ -215,7 +216,7 @@ export async function handleLoadManifestPlaylist(): Promise<void> {
           dom.manifestLiveStreamInfo.style.display = live ? "block" : "none";
           if (live) {
             const infoText = document.getElementById("hlsLiveStreamInfoText");
-            if (infoText) infoText.textContent = "This is a live DASH stream. Click Record to start capturing.";
+            if (infoText) infoText.textContent = t("manifest.liveDashClickRecord");
           }
         }
       }
@@ -255,7 +256,7 @@ export async function handleLoadManifestPlaylist(): Promise<void> {
           dom.manifestLiveStreamInfo.style.display = isLiveManifest ? "block" : "none";
           const infoText = document.getElementById("hlsLiveStreamInfoText");
           if (infoText) {
-            infoText.textContent = "This is a live stream. Click Record to start capturing the stream.";
+            infoText.textContent = t("manifest.liveClickRecord");
           }
         }
         if (dom.manifestQualitySelection) {
@@ -284,11 +285,11 @@ export async function handleLoadManifestPlaylist(): Promise<void> {
             dom.manifestLiveStreamInfo.style.display = isLiveManifest ? "block" : "none";
             const infoText = document.getElementById("hlsLiveStreamInfoText");
             if (infoText) {
-              infoText.textContent = "This is a live stream. Select a quality and click Record to start capturing the stream.";
+              infoText.textContent = t("manifest.liveSelectQualityRecord");
             }
           }
 
-          videoQualitySelect.innerHTML = '<option value="">None (audio only)</option>';
+          videoQualitySelect.innerHTML = `<option value="">${t("manifest.noneAudioOnly")}</option>`;
           videoLevels.forEach((level, index) => {
             const option = document.createElement("option");
             option.value = level.uri;
@@ -298,7 +299,7 @@ export async function handleLoadManifestPlaylist(): Promise<void> {
           });
           videoQualitySelect.disabled = false;
 
-          audioQualitySelect.innerHTML = '<option value="">None (video only)</option>';
+          audioQualitySelect.innerHTML = `<option value="">${t("manifest.noneVideoOnly")}</option>`;
           audioLevels.forEach((level, index) => {
             const option = document.createElement("option");
             option.value = level.uri;
@@ -318,14 +319,14 @@ export async function handleLoadManifestPlaylist(): Promise<void> {
           updateDownloadButtonState();
         }
       } else {
-        throw new Error("Invalid playlist format");
+        throw new Error(t("manifest.invalidFormat"));
       }
     }
 
     updateManualManifestFormState();
   } catch (error) {
     console.error("Failed to load manifest:", error);
-    alert("Failed to load manifest. Please check the URL and try again.");
+    alert(t("manifest.loadFailed"));
     if (dom.manifestMediaPlaylistWarning) dom.manifestMediaPlaylistWarning.style.display = "none";
     if (dom.manifestLiveStreamInfo) dom.manifestLiveStreamInfo.style.display = "none";
     if (dom.manifestDrmWarning) dom.manifestDrmWarning.style.display = "none";
@@ -338,7 +339,7 @@ export async function handleLoadManifestPlaylist(): Promise<void> {
   } finally {
     if (loadManifestPlaylistBtn) {
       loadManifestPlaylistBtn.disabled = false;
-      loadManifestPlaylistBtn.textContent = "Load";
+      loadManifestPlaylistBtn.textContent = t("common.load");
     }
   }
 }
@@ -350,7 +351,7 @@ export async function handleStartManifestDownload(): Promise<void> {
   const rawPlaylistUrl = manifestUrlInput.value.trim();
 
   if (!rawPlaylistUrl) {
-    alert("Please enter a manifest URL");
+    alert(t("manifest.enterUrl"));
     return;
   }
 
@@ -377,14 +378,14 @@ export async function handleStartManifestDownload(): Promise<void> {
       audioPlaylistUrl = rawAudioUrl ? normalizeUrl(rawAudioUrl) : null;
 
       if (!videoPlaylistUrl && !audioPlaylistUrl) {
-        alert("Please select at least one quality (video or audio)");
+        alert(t("manifest.selectQualityRequired"));
         return;
       }
       manifestQualityPayload = { videoPlaylistUrl, audioPlaylistUrl };
     }
   }
 
-  startManifestDownloadBtn.textContent = "Starting...";
+  startManifestDownloadBtn.textContent = t("common.starting");
 
   if (manifestUrlInput) manifestUrlInput.disabled = true;
   if (dom.loadManifestPlaylistBtn) dom.loadManifestPlaylistBtn.disabled = true;
@@ -420,7 +421,7 @@ export async function handleStartManifestDownload(): Promise<void> {
       format: currentManifestFormat === VideoFormat.DASH
         ? VideoFormat.DASH
         : (isMediaPlaylistMode ? VideoFormat.M3U8 : VideoFormat.HLS),
-      title: tabTitle || "Manifest Video",
+      title: tabTitle || t("manifest.defaultTitle"),
       pageUrl: pageUrl || window.location.href,
       isLive: isLiveManifest,
     };
@@ -463,7 +464,7 @@ export async function handleStartManifestDownload(): Promise<void> {
       );
     });
 
-    const buttonLabel = isLiveManifest ? "Record" : "Download";
+    const buttonLabel = isLiveManifest ? t("common.record") : t("common.download");
 
     if (response && response.success) {
       setCurrentManualManifestUrl(null);
@@ -480,8 +481,8 @@ export async function handleStartManifestDownload(): Promise<void> {
     }
   } catch (error: any) {
     console.error("Download request failed:", error);
-    alert("Failed to start download: " + (error?.message || "Unknown error"));
-    startManifestDownloadBtn.textContent = isLiveManifest ? "Record" : "Download";
+    alert(t("manifest.startFailed", { error: error?.message || t("common.unknownError") }));
+    startManifestDownloadBtn.textContent = isLiveManifest ? t("common.record") : t("common.download");
     updateManualManifestFormState();
   }
 }

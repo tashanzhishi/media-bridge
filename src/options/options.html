@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="i18n-pending">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Media Bridge Settings</title>
+  <title data-i18n="options.title">Media Bridge Settings</title>
   <link rel="stylesheet" href="/shared.css">
   <style>
     :root { --sidebar-width: 220px; }
@@ -854,7 +854,7 @@
       </div>
 
       <nav class="sidebar-nav">
-        <button class="nav-item active" data-view="download-settings" title="Download Settings">
+        <button class="nav-item active" data-view="download-settings" title="Download Settings" data-i18n-title="nav.downloadSettings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="4" y1="21" x2="4" y2="14"></line>
             <line x1="4" y1="10" x2="4" y2="3"></line>
@@ -866,61 +866,61 @@
             <line x1="9" y1="8" x2="15" y2="8"></line>
             <line x1="17" y1="16" x2="23" y2="16"></line>
           </svg>
-          <span>Download Settings</span>
+          <span data-i18n="nav.downloadSettings">Download Settings</span>
         </button>
 
-        <button class="nav-item" data-view="cloud-providers" title="Cloud Providers">
+        <button class="nav-item" data-view="cloud-providers" title="Cloud Providers" data-i18n-title="nav.cloudProviders">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
           </svg>
-          <span>Cloud Providers</span>
+          <span data-i18n="nav.cloudProviders">Cloud Providers</span>
         </button>
 
-        <button class="nav-item" data-view="history" title="History">
+        <button class="nav-item" data-view="history" title="History" data-i18n-title="nav.history">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"></circle>
             <polyline points="12 6 12 12 16 14"></polyline>
           </svg>
-          <span>History</span>
+          <span data-i18n="nav.history">History</span>
         </button>
 
-        <button class="nav-item" data-view="recording" title="Recording">
+        <button class="nav-item" data-view="recording" title="Recording" data-i18n-title="nav.recording">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"></circle>
             <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"></circle>
           </svg>
-          <span>Recording</span>
+          <span data-i18n="nav.recording">Recording</span>
         </button>
 
-        <button class="nav-item" data-view="notifications" title="Notifications">
+        <button class="nav-item" data-view="notifications" title="Notifications" data-i18n-title="nav.notifications">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
           </svg>
-          <span>Notifications</span>
+          <span data-i18n="nav.notifications">Notifications</span>
         </button>
 
-        <button class="nav-item" data-view="advanced" title="Advanced">
+        <button class="nav-item" data-view="advanced" title="Advanced" data-i18n-title="nav.advanced">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="16 18 22 12 16 6"></polyline>
             <polyline points="8 6 2 12 8 18"></polyline>
           </svg>
-          <span>Advanced</span>
+          <span data-i18n="nav.advanced">Advanced</span>
         </button>
 
-        <button class="nav-item" data-view="about" title="About">
+        <button class="nav-item" data-view="about" title="About" data-i18n-title="nav.about">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="8" x2="12" y2="12"></line>
             <line x1="12" y1="16" x2="12.01" y2="16"></line>
           </svg>
-          <span>About</span>
+          <span data-i18n="nav.about">About</span>
         </button>
 
       </nav>
 
       <div class="sidebar-footer">
-        <button class="theme-toggle" id="theme-toggle" title="Toggle theme">
+        <button class="theme-toggle" id="theme-toggle" title="Toggle theme" data-i18n-title="theme.toggle">
           <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="5"></circle>
             <line x1="12" y1="1" x2="12" y2="3"></line>
@@ -942,14 +942,14 @@
       <!-- ===== Download Settings View ===== -->
       <div id="view-download-settings" class="view active">
         <div class="view-header">
-          <h1>Download Settings</h1>
-          <p>Configure segment download concurrency and FFmpeg processing limits.</p>
+          <h1 data-i18n="download.title">Download Settings</h1>
+          <p data-i18n="download.desc">Configure segment download concurrency and FFmpeg processing limits.</p>
         </div>
 
         <div class="section">
-          <h2 class="section-title">Concurrency</h2>
+          <h2 class="section-title" data-i18n="download.concurrency">Concurrency</h2>
           <div class="form-group">
-            <label class="form-label" for="max-concurrent">Max Concurrent Downloads</label>
+            <label class="form-label" for="max-concurrent" data-i18n="download.maxConcurrent">Max Concurrent Downloads</label>
             <input
               type="number"
               id="max-concurrent"
@@ -959,14 +959,14 @@
               value="3"
               style="max-width: 120px;"
             />
-            <div class="form-help">Number of segments to download simultaneously (1–10).</div>
+            <div class="form-help" data-i18n="download.maxConcurrentHelp">Number of segments to download simultaneously (1–10).</div>
           </div>
         </div>
 
         <div class="section">
-          <h2 class="section-title">FFmpeg</h2>
+          <h2 class="section-title" data-i18n="download.ffmpeg">FFmpeg</h2>
           <div class="form-group">
-            <label class="form-label" for="ffmpeg-timeout">Processing Timeout (s)</label>
+            <label class="form-label" for="ffmpeg-timeout" data-i18n="download.ffmpegTimeout">Processing Timeout (s)</label>
             <input
               type="number"
               id="ffmpeg-timeout"
@@ -977,25 +977,25 @@
               value="900"
               style="max-width: 120px;"
             />
-            <div class="form-help">Maximum time for FFmpeg to process a video (300–3 600 s). Increase for very large files.</div>
+            <div class="form-help" data-i18n="download.ffmpegTimeoutHelp">Maximum time for FFmpeg to process a video (300–3 600 s). Increase for very large files.</div>
           </div>
         </div>
 
         <div class="btn-row">
-          <button id="save-download-settings" class="btn btn-primary">Save Settings</button>
+          <button id="save-download-settings" class="btn btn-primary" data-i18n="common.save">Save Settings</button>
         </div>
       </div>
 
       <!-- ===== Cloud Providers View ===== -->
       <div id="view-cloud-providers" class="view">
         <div class="view-header">
-          <h1>Cloud Providers</h1>
-          <p>Connect cloud storage for automatic upload after download.</p>
+          <h1 data-i18n="cloud.title">Cloud Providers</h1>
+          <p data-i18n="cloud.desc">Connect cloud storage for automatic upload after download.</p>
         </div>
 
         <div class="seg-tabs">
-          <button class="provider-tab seg-tab active" data-provider="google-drive">Google Drive</button>
-          <button class="provider-tab seg-tab" data-provider="s3">S3 / Compatible</button>
+          <button class="provider-tab seg-tab active" data-provider="google-drive" data-i18n="cloud.tabDrive">Google Drive</button>
+          <button class="provider-tab seg-tab" data-provider="s3" data-i18n="cloud.tabS3">S3 / Compatible</button>
         </div>
 
         <!-- Google Drive Panel -->
@@ -1004,18 +1004,18 @@
             <div class="form-group">
               <label class="form-label">
                 <input type="checkbox" id="drive-enabled" class="form-checkbox">
-                Enable Google Drive uploads
+                <span data-i18n="cloud.enableDrive">Enable Google Drive uploads</span>
               </label>
-              <div class="form-help">Connect Google Drive to upload downloaded videos.</div>
+              <div class="form-help" data-i18n="cloud.enableDriveHelp">Connect Google Drive to upload downloaded videos.</div>
             </div>
 
             <div id="drive-settings" style="display:none;">
 
               <div class="form-group">
-                <label class="form-label" for="drive-client-id">OAuth Client ID</label>
+                <label class="form-label" for="drive-client-id" data-i18n="drive.clientId">OAuth Client ID</label>
                 <input type="text" id="drive-client-id" class="form-input" placeholder="xxxxxxxxx.apps.googleusercontent.com" />
                 <!-- Google Drive requires users to create their own OAuth credentials (free). -->
-                <div class="form-help">
+                <div class="form-help" data-i18n-html="drive.oauthHelp">
                   To use Google Drive you need your own OAuth credentials (free):
                   <ol style="margin:6px 0 0 16px;padding:0;line-height:1.6;">
                     <li>Go to <a href="https://console.cloud.google.com/apis/library/drive.googleapis.com" target="_blank" rel="noopener">Google Cloud Console → APIs</a> and enable the <strong>Google Drive API</strong>.</li>
@@ -1028,32 +1028,32 @@
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="drive-folder-name">Folder Name</label>
+                <label class="form-label" for="drive-folder-name" data-i18n="drive.folderName">Folder Name</label>
                 <input type="text" id="drive-folder-name" class="form-input" placeholder="MediaBridge Uploads" />
-                <div class="form-help">Name of the folder to store uploads. Will be created if it doesn't exist.</div>
+                <div class="form-help" data-i18n="drive.folderNameHelp">Name of the folder to store uploads. Will be created if it doesn't exist.</div>
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="drive-folder-id">Target Folder ID (Optional)</label>
+                <label class="form-label" for="drive-folder-id" data-i18n="drive.folderId">Target Folder ID (Optional)</label>
                 <input type="text" id="drive-folder-id" class="form-input" placeholder="Enter Google Drive folder ID" />
-                <div class="form-help">Upload to a specific folder. Leave empty to use the folder name above.</div>
+                <div class="form-help" data-i18n="drive.folderIdHelp">Upload to a specific folder. Leave empty to use the folder name above.</div>
               </div>
 
               <div class="form-group">
                 <label class="form-label">
-                  Authentication
-                  <span id="auth-status" class="auth-status not-authenticated">Not Authenticated</span>
+                  <span data-i18n="drive.authentication">Authentication</span>
+                  <span id="auth-status" class="auth-status not-authenticated" data-i18n="drive.notAuthenticated">Not Authenticated</span>
                 </label>
                 <div style="display:flex; gap:8px; margin-top:6px;">
-                  <button id="auth-btn" class="btn btn-primary">Sign in with Google</button>
-                  <button id="sign-out-btn" class="btn btn-secondary" style="display:none;">Sign Out</button>
+                  <button id="auth-btn" class="btn btn-primary" data-i18n="drive.signIn">Sign in with Google</button>
+                  <button id="sign-out-btn" class="btn btn-secondary" style="display:none;" data-i18n="drive.signOut">Sign Out</button>
                 </div>
               </div>
             </div>
           </div>
 
           <div class="btn-row">
-            <button id="save-drive-settings" class="btn btn-primary">Save Settings</button>
+            <button id="save-drive-settings" class="btn btn-primary" data-i18n="common.save">Save Settings</button>
           </div>
         </div>
 
@@ -1063,85 +1063,85 @@
             <div class="form-group">
               <label class="form-label">
                 <input type="checkbox" id="s3-enabled" class="form-checkbox">
-                Enable S3 uploads
+                <span data-i18n="s3.enable">Enable S3 uploads</span>
               </label>
-              <div class="form-help">Upload downloaded videos to any S3-compatible storage (AWS S3, Cloudflare R2, Backblaze B2, etc.).</div>
+              <div class="form-help" data-i18n="s3.enableHelp">Upload downloaded videos to any S3-compatible storage (AWS S3, Cloudflare R2, Backblaze B2, etc.).</div>
             </div>
 
             <div id="s3-settings" style="display:none;">
 
 
             <div class="form-group">
-              <label class="form-label" for="s3-provider-preset">Provider Preset</label>
+              <label class="form-label" for="s3-provider-preset" data-i18n="s3.providerPreset">Provider Preset</label>
               <select id="s3-provider-preset" class="form-input">
-                <option value="">Custom / AWS S3</option>
-                <option value="r2">Cloudflare R2</option>
-                <option value="b2">Backblaze B2</option>
-                <option value="wasabi">Wasabi</option>
-                <option value="do">DigitalOcean Spaces</option>
-                <option value="minio">MinIO (self-hosted)</option>
+                <option value="" data-i18n="s3.presetCustom">Custom / AWS S3</option>
+                <option value="r2" data-i18n="s3.presetR2">Cloudflare R2</option>
+                <option value="b2" data-i18n="s3.presetB2">Backblaze B2</option>
+                <option value="wasabi" data-i18n="s3.presetWasabi">Wasabi</option>
+                <option value="do" data-i18n="s3.presetDo">DigitalOcean Spaces</option>
+                <option value="minio" data-i18n="s3.presetMinio">MinIO (self-hosted)</option>
               </select>
-              <div class="form-help">Select a preset to auto-fill the endpoint template.</div>
+              <div class="form-help" data-i18n="s3.presetHelp">Select a preset to auto-fill the endpoint template.</div>
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="s3-bucket">Bucket</label>
+              <label class="form-label" for="s3-bucket" data-i18n="s3.bucket">Bucket</label>
               <input type="text" id="s3-bucket" class="form-input" placeholder="my-bucket" />
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="s3-region">Region</label>
+              <label class="form-label" for="s3-region" data-i18n="s3.region">Region</label>
               <input type="text" id="s3-region" class="form-input" placeholder="us-east-1" />
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="s3-endpoint">Endpoint (S3-compatible)</label>
+              <label class="form-label" for="s3-endpoint" data-i18n="s3.endpoint">Endpoint (S3-compatible)</label>
               <input type="text" id="s3-endpoint" class="form-input" placeholder="https://s3.example.com (leave empty for AWS)" />
-              <div class="form-help">Custom endpoint for Cloudflare R2, Backblaze B2, MinIO, etc. Leave empty for AWS S3.</div>
+              <div class="form-help" data-i18n="s3.endpointHelp">Custom endpoint for Cloudflare R2, Backblaze B2, MinIO, etc. Leave empty for AWS S3.</div>
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="s3-access-key">Access Key ID</label>
+              <label class="form-label" for="s3-access-key" data-i18n="s3.accessKey">Access Key ID</label>
               <input type="text" id="s3-access-key" class="form-input" placeholder="AKIAIOSFODNN7EXAMPLE" autocomplete="off" />
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="s3-secret-key">Secret Access Key</label>
+              <label class="form-label" for="s3-secret-key" data-i18n="s3.secretKey">Secret Access Key</label>
               <input type="password" id="s3-secret-key" class="form-input" placeholder="••••••••••••••••••••••••••••••••" autocomplete="off" />
-              <div class="form-help">Leave blank to keep the currently stored key.</div>
+              <div class="form-help" data-i18n="s3.secretKeyHelp">Leave blank to keep the currently stored key.</div>
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="s3-passphrase">Encryption Passphrase <span style="font-weight:400;color:var(--text-2)">(optional)</span></label>
-              <input type="password" id="s3-passphrase" class="form-input" placeholder="Leave blank to store key unencrypted" autocomplete="new-password" />
-              <div class="form-help">When set, your secret key is encrypted with AES-GCM before being written to disk. You will re-enter this passphrase once per browser session.</div>
+              <label class="form-label" for="s3-passphrase"><span data-i18n="s3.passphrase">Encryption Passphrase</span> <span style="font-weight:400;color:var(--text-2)" data-i18n="common.optional">(optional)</span></label>
+              <input type="password" id="s3-passphrase" class="form-input" placeholder="Leave blank to store key unencrypted" data-i18n-placeholder="s3.passphrasePlaceholder" autocomplete="new-password" />
+              <div class="form-help" data-i18n="s3.passphraseHelp">When set, your secret key is encrypted with AES-GCM before being written to disk. You will re-enter this passphrase once per browser session.</div>
             </div>
 
             <div class="form-group" id="s3-passphrase-confirm-group" style="display:none;">
-              <label class="form-label" for="s3-passphrase-confirm">Confirm Passphrase</label>
-              <input type="password" id="s3-passphrase-confirm" class="form-input" placeholder="Repeat passphrase" autocomplete="new-password" />
+              <label class="form-label" for="s3-passphrase-confirm" data-i18n="s3.confirmPassphrase">Confirm Passphrase</label>
+              <input type="password" id="s3-passphrase-confirm" class="form-input" placeholder="Repeat passphrase" data-i18n-placeholder="s3.confirmPassphrasePlaceholder" autocomplete="new-password" />
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="s3-prefix">Key Prefix (Optional)</label>
+              <label class="form-label" for="s3-prefix" data-i18n="s3.prefix">Key Prefix (Optional)</label>
               <input type="text" id="s3-prefix" class="form-input" placeholder="videos/" />
-              <div class="form-help">Prefix added to all uploaded object keys.</div>
+              <div class="form-help" data-i18n="s3.prefixHelp">Prefix added to all uploaded object keys.</div>
             </div>
 
             <div class="form-group">
               <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                <button id="s3-test-connection" class="btn btn-secondary">Test Connection</button>
+                <button id="s3-test-connection" class="btn btn-secondary" data-i18n="s3.testConnection">Test Connection</button>
                 <span id="s3-test-result" style="font-size:12px;"></span>
               </div>
             </div>
 
             <div class="form-group">
               <details>
-                <summary style="cursor:pointer; font-size:13px; font-weight:500; color:var(--text-secondary);">CORS configuration (required for browser uploads)</summary>
+                <summary style="cursor:pointer; font-size:13px; font-weight:500; color:var(--text-secondary);" data-i18n="s3.corsSummary">CORS configuration (required for browser uploads)</summary>
                 <div id="s3-cors-helper" style="margin-top:8px;">
-                  <div class="form-help" style="margin-bottom:6px;">Add this CORS policy to your bucket. Replace <code>YOUR_EXTENSION_ID</code> with your extension ID (find it at chrome://extensions).</div>
+                  <div class="form-help" style="margin-bottom:6px;" data-i18n-html="s3.corsHelp">Add this CORS policy to your bucket. Replace <code>YOUR_EXTENSION_ID</code> with your extension ID (find it at chrome://extensions).</div>
                   <pre id="s3-cors-json" style="background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:10px;font-size:11px;overflow-x:auto;white-space:pre-wrap;"></pre>
-                  <button id="s3-copy-cors" class="btn btn-secondary" style="margin-top:6px; font-size:12px;">Copy CORS Config</button>
+                  <button id="s3-copy-cors" class="btn btn-secondary" style="margin-top:6px; font-size:12px;" data-i18n="s3.copyCors">Copy CORS Config</button>
                 </div>
               </details>
             </div>
@@ -1149,7 +1149,7 @@
           </div>
 
           <div class="btn-row">
-            <button id="save-s3-settings" class="btn btn-primary">Save Settings</button>
+            <button id="save-s3-settings" class="btn btn-primary" data-i18n="common.save">Save Settings</button>
           </div>
         </div>
       </div>
@@ -1157,34 +1157,34 @@
       <!-- ===== History View ===== -->
       <div id="view-history" class="view">
         <div class="view-header">
-          <h1>Download History</h1>
+          <h1 data-i18n="history.title">Download History</h1>
           <label class="toggle-row" id="history-enabled-row">
             <input type="checkbox" id="history-enabled" checked>
-            <span>Save history</span>
+            <span data-i18n="history.saveHistory">Save history</span>
           </label>
         </div>
 
         <div class="history-controls">
           <div class="history-filters" id="history-filters">
-            <input type="text" id="history-search" placeholder="Search by title or URL…" />
+            <input type="text" id="history-search" placeholder="Search by title or URL…" data-i18n-placeholder="history.searchPlaceholder" />
             <select id="filter-format">
-              <option value="all">All formats</option>
+              <option value="all" data-i18n="history.allFormats">All formats</option>
               <option value="hls">HLS</option>
               <option value="m3u8">M3U8</option>
               <option value="dash">DASH</option>
-              <option value="direct">Direct</option>
+              <option value="direct" data-i18n="format.direct">Direct</option>
             </select>
             <select id="filter-status">
-              <option value="all">All statuses</option>
-              <option value="completed">Completed</option>
-              <option value="failed">Failed</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="all" data-i18n="history.allStatuses">All statuses</option>
+              <option value="completed" data-i18n="history.completed">Completed</option>
+              <option value="failed" data-i18n="history.failed">Failed</option>
+              <option value="cancelled" data-i18n="history.cancelled">Cancelled</option>
             </select>
             <select id="filter-date">
-              <option value="all">All time</option>
-              <option value="today">Today</option>
-              <option value="week">This week</option>
-              <option value="month">This month</option>
+              <option value="all" data-i18n="history.allTime">All time</option>
+              <option value="today" data-i18n="history.today">Today</option>
+              <option value="week" data-i18n="history.thisWeek">This week</option>
+              <option value="month" data-i18n="history.thisMonth">This month</option>
             </select>
           </div>
         </div>
@@ -1192,10 +1192,10 @@
         <div class="bulk-bar" id="bulk-bar">
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
             <input type="checkbox" id="select-all" style="accent-color:var(--accent);">
-            Select all
+            <span data-i18n="history.selectAll">Select all</span>
           </label>
-          <span class="bulk-count" id="bulk-count">0 selected</span>
-          <button id="bulk-delete" class="btn btn-danger" style="padding:6px 12px;font-size:12px;">Delete selected</button>
+          <span class="bulk-count" id="bulk-count" data-i18n="history.selectedNone">0 selected</span>
+          <button id="bulk-delete" class="btn btn-danger" style="padding:6px 12px;font-size:12px;" data-i18n="history.deleteSelected">Delete selected</button>
         </div>
 
         <div id="history-list"></div>
@@ -1204,28 +1204,28 @@
             <circle cx="12" cy="12" r="10"></circle>
             <polyline points="12 6 12 12 16 14"></polyline>
           </svg>
-          <span>No completed downloads yet.</span>
+          <span data-i18n="history.empty">No completed downloads yet.</span>
         </div>
         <div id="history-disabled" class="empty-state">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
           </svg>
-          <span>History is disabled. Enable "Save history" above to start tracking downloads.</span>
+          <span data-i18n="history.disabled">History is disabled. Enable "Save history" above to start tracking downloads.</span>
         </div>
       </div>
 
       <!-- ===== Recording View ===== -->
       <div id="view-recording" class="view">
         <div class="view-header">
-          <h1>Recording</h1>
-          <p>Configure live stream recording poll intervals and behaviour.</p>
+          <h1 data-i18n="recording.title">Recording</h1>
+          <p data-i18n="recording.desc">Configure live stream recording poll intervals and behaviour.</p>
         </div>
 
         <div class="section">
-          <h2 class="section-title">HLS Poll Interval</h2>
+          <h2 class="section-title" data-i18n="recording.hlsPollInterval">HLS Poll Interval</h2>
           <div class="form-group">
-            <label class="form-label" for="poll-min">Minimum poll interval (s)</label>
+            <label class="form-label" for="poll-min" data-i18n="recording.minPoll">Minimum poll interval (s)</label>
             <input
               type="number"
               id="poll-min"
@@ -1236,10 +1236,10 @@
               value="1"
               style="max-width: 140px;"
             />
-            <div class="form-help">Floor for computed poll cadence (0.5–5 s).</div>
+            <div class="form-help" data-i18n="recording.minPollHelp">Floor for computed poll cadence (0.5–5 s).</div>
           </div>
           <div class="form-group">
-            <label class="form-label" for="poll-max">Maximum poll interval (s)</label>
+            <label class="form-label" for="poll-max" data-i18n="recording.maxPoll">Maximum poll interval (s)</label>
             <input
               type="number"
               id="poll-max"
@@ -1250,10 +1250,10 @@
               value="10"
               style="max-width: 140px;"
             />
-            <div class="form-help">Ceiling for computed poll cadence (2–30 s).</div>
+            <div class="form-help" data-i18n="recording.maxPollHelp">Ceiling for computed poll cadence (2–30 s).</div>
           </div>
           <div class="form-group">
-            <label class="form-label" for="poll-fraction">Poll fraction</label>
+            <label class="form-label" for="poll-fraction" data-i18n="recording.pollFraction">Poll fraction</label>
             <input
               type="number"
               id="poll-fraction"
@@ -1264,85 +1264,85 @@
               value="0.5"
               style="max-width: 140px;"
             />
-            <div class="form-help">Fraction of <code>#EXT-X-TARGETDURATION</code> used to compute poll cadence (0.25–1.0).</div>
+            <div class="form-help" data-i18n-html="recording.pollFractionHelp">Fraction of <code>#EXT-X-TARGETDURATION</code> used to compute poll cadence (0.25–1.0).</div>
           </div>
         </div>
 
         <div class="btn-row">
-          <button id="save-recording-settings" class="btn btn-primary">Save Settings</button>
+          <button id="save-recording-settings" class="btn btn-primary" data-i18n="common.save">Save Settings</button>
         </div>
       </div>
 
       <!-- ===== Notifications View ===== -->
       <div id="view-notifications" class="view">
         <div class="view-header">
-          <h1>Notifications</h1>
-          <p>Control OS notifications and post-download actions.</p>
+          <h1 data-i18n="notifications.title">Notifications</h1>
+          <p data-i18n="notifications.desc">Control OS notifications and post-download actions.</p>
         </div>
 
         <div class="section">
-          <h2 class="section-title">Post-Download</h2>
+          <h2 class="section-title" data-i18n="notifications.postDownload">Post-Download</h2>
           <div class="form-group">
             <label class="toggle-row" style="margin-top:0;">
               <input type="checkbox" id="notify-on-completion">
-              <span>Notify on completion</span>
+              <span data-i18n="notifications.notifyOnCompletion">Notify on completion</span>
             </label>
-            <div class="form-help" style="margin-top:6px;">Show an OS notification when a download finishes.</div>
+            <div class="form-help" style="margin-top:6px;" data-i18n="notifications.notifyOnCompletionHelp">Show an OS notification when a download finishes.</div>
           </div>
           <div class="form-group">
             <label class="toggle-row" style="margin-top:0;">
               <input type="checkbox" id="auto-open-file">
-              <span>Auto-open file when done</span>
+              <span data-i18n="notifications.autoOpen">Auto-open file when done</span>
             </label>
-            <div class="form-help" style="margin-top:6px;">Reveal the saved file in Finder / Explorer after download completes.</div>
+            <div class="form-help" style="margin-top:6px;" data-i18n="notifications.autoOpenHelp">Reveal the saved file in Finder / Explorer after download completes.</div>
           </div>
         </div>
 
         <div class="btn-row">
-          <button id="save-notification-settings" class="btn btn-primary">Save Settings</button>
+          <button id="save-notification-settings" class="btn btn-primary" data-i18n="common.save">Save Settings</button>
         </div>
       </div>
 
       <!-- ===== Advanced View ===== -->
       <div id="view-advanced" class="view">
         <div class="view-header">
-          <h1>Advanced</h1>
-          <p>Fine-tune retry behaviour, detection caches, and internal write frequency.</p>
+          <h1 data-i18n="advanced.title">Advanced</h1>
+          <p data-i18n="advanced.desc">Fine-tune retry behaviour, detection caches, and internal write frequency.</p>
         </div>
 
         <div class="seg-tabs">
-          <button class="advanced-tab seg-tab active" data-tab="retry">Retry &amp; Reliability</button>
-          <button class="advanced-tab seg-tab" data-tab="caches">Detection Caches</button>
-          <button class="advanced-tab seg-tab" data-tab="performance">Performance</button>
+          <button class="advanced-tab seg-tab active" data-tab="retry" data-i18n="advanced.tabRetry">Retry &amp; Reliability</button>
+          <button class="advanced-tab seg-tab" data-tab="caches" data-i18n="advanced.tabCaches">Detection Caches</button>
+          <button class="advanced-tab seg-tab" data-tab="performance" data-i18n="advanced.tabPerformance">Performance</button>
         </div>
 
         <!-- Retry & Reliability Panel -->
         <div id="advanced-retry" class="advanced-panel active">
           <div class="section">
             <div class="form-group">
-              <label class="form-label" for="max-retries">Max segment retries</label>
+              <label class="form-label" for="max-retries" data-i18n="advanced.maxRetries">Max segment retries</label>
               <input type="number" id="max-retries" class="form-input" min="1" max="10" value="3" style="max-width: 120px;" />
-              <div class="form-help">Number of times to retry a failed segment or manifest fetch (1–10).</div>
+              <div class="form-help" data-i18n="advanced.maxRetriesHelp">Number of times to retry a failed segment or manifest fetch (1–10).</div>
             </div>
             <div class="form-group">
-              <label class="form-label" for="retry-delay">Retry initial delay (s)</label>
+              <label class="form-label" for="retry-delay" data-i18n="advanced.retryDelay">Retry initial delay (s)</label>
               <input type="number" id="retry-delay" class="form-input" min="0.05" max="1" step="0.05" value="0.1" style="max-width: 120px;" />
-              <div class="form-help">First backoff wait after a fetch failure (0.05–1 s).</div>
+              <div class="form-help" data-i18n="advanced.retryDelayHelp">First backoff wait after a fetch failure (0.05–1 s).</div>
             </div>
             <div class="form-group">
-              <label class="form-label" for="retry-backoff">Retry backoff multiplier</label>
+              <label class="form-label" for="retry-backoff" data-i18n="advanced.retryBackoff">Retry backoff multiplier</label>
               <input type="number" id="retry-backoff" class="form-input" min="1.0" max="3.0" step="0.05" value="1.15" style="max-width: 120px;" />
-              <div class="form-help">Exponential growth factor applied after each retry (1.0–3.0).</div>
+              <div class="form-help" data-i18n="advanced.retryBackoffHelp">Exponential growth factor applied after each retry (1.0–3.0).</div>
             </div>
             <div class="form-group">
-              <label class="form-label" for="failure-rate">Fragment failure tolerance (%)</label>
+              <label class="form-label" for="failure-rate" data-i18n="advanced.failureRate">Fragment failure tolerance (%)</label>
               <input type="number" id="failure-rate" class="form-input" min="5" max="50" step="1" value="10" style="max-width: 120px;" />
-              <div class="form-help">Download is aborted when more than this percentage of segments fail (5–50%).</div>
+              <div class="form-help" data-i18n="advanced.failureRateHelp">Download is aborted when more than this percentage of segments fail (5–50%).</div>
             </div>
           </div>
           <div class="btn-row">
-            <button id="save-advanced-settings" class="btn btn-primary">Save Settings</button>
-            <button id="reset-advanced-settings" class="btn btn-danger">Reset to defaults</button>
+            <button id="save-advanced-settings" class="btn btn-primary" data-i18n="common.save">Save Settings</button>
+            <button id="reset-advanced-settings" class="btn btn-danger" data-i18n="common.reset">Reset to defaults</button>
           </div>
         </div>
 
@@ -1350,19 +1350,19 @@
         <div id="advanced-caches" class="advanced-panel">
           <div class="section">
             <div class="form-group">
-              <label class="form-label" for="detection-cache-size">URL deduplication cache size</label>
+              <label class="form-label" for="detection-cache-size" data-i18n="advanced.detectionCacheSize">URL deduplication cache size</label>
               <input type="number" id="detection-cache-size" class="form-input" min="100" max="2000" step="50" value="500" style="max-width: 140px;" />
-              <div class="form-help">Max distinct URL path keys tracked per page by HLS and DASH handlers (100–2 000).</div>
+              <div class="form-help" data-i18n="advanced.detectionCacheSizeHelp">Max distinct URL path keys tracked per page by HLS and DASH handlers (100–2 000).</div>
             </div>
             <div class="form-group">
-              <label class="form-label" for="master-playlist-cache-size">Master playlist cache size</label>
+              <label class="form-label" for="master-playlist-cache-size" data-i18n="advanced.masterPlaylistCacheSize">Master playlist cache size</label>
               <input type="number" id="master-playlist-cache-size" class="form-input" min="10" max="200" step="5" value="50" style="max-width: 140px;" />
-              <div class="form-help">Max HLS master playlists held in memory per page (10–200).</div>
+              <div class="form-help" data-i18n="advanced.masterPlaylistCacheSizeHelp">Max HLS master playlists held in memory per page (10–200).</div>
             </div>
           </div>
           <div class="btn-row">
-            <button id="save-advanced-settings-caches" class="btn btn-primary">Save Settings</button>
-            <button id="reset-advanced-settings-caches" class="btn btn-danger">Reset to defaults</button>
+            <button id="save-advanced-settings-caches" class="btn btn-primary" data-i18n="common.save">Save Settings</button>
+            <button id="reset-advanced-settings-caches" class="btn btn-danger" data-i18n="common.reset">Reset to defaults</button>
           </div>
         </div>
 
@@ -1370,14 +1370,22 @@
         <div id="advanced-performance" class="advanced-panel">
           <div class="section">
             <div class="form-group">
-              <label class="form-label" for="db-sync-interval">IndexedDB sync interval (s)</label>
+              <label class="form-label" for="db-sync-interval" data-i18n="advanced.dbSyncInterval">IndexedDB sync interval (s)</label>
               <input type="number" id="db-sync-interval" class="form-input" min="0.1" max="2" step="0.1" value="0.5" style="max-width: 140px;" />
-              <div class="form-help">How often download state is written to IndexedDB during segment downloads. Lower values increase write frequency.</div>
+              <div class="form-help" data-i18n="advanced.dbSyncIntervalHelp">How often download state is written to IndexedDB during segment downloads. Lower values increase write frequency.</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="ui-language" data-i18n="advanced.language.label">Language</label>
+              <select id="ui-language" class="form-input" style="max-width: 200px;">
+                <option value="en">English</option>
+                <option value="zh">中文</option>
+              </select>
+              <div class="form-help" data-i18n="advanced.language.help">Interface language. Changing this takes effect after reloading the page.</div>
             </div>
           </div>
           <div class="btn-row">
-            <button id="save-advanced-settings-perf" class="btn btn-primary">Save Settings</button>
-            <button id="reset-advanced-settings-perf" class="btn btn-danger">Reset to defaults</button>
+            <button id="save-advanced-settings-perf" class="btn btn-primary" data-i18n="common.save">Save Settings</button>
+            <button id="reset-advanced-settings-perf" class="btn btn-danger" data-i18n="common.reset">Reset to defaults</button>
           </div>
         </div>
       </div>
@@ -1385,19 +1393,19 @@
       <!-- ===== About View ===== -->
       <div id="view-about" class="view">
         <div class="view-header">
-          <h2 class="view-title">About</h2>
+          <h2 class="view-title" data-i18n="about.title">About</h2>
         </div>
         <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 48px 24px; gap: 16px; text-align:center;">
           <img src="/icons/icon-128.png" alt="Media Bridge" width="72" height="72" style="border-radius:16px;">
           <div>
             <h3 style="font-size:20px; font-weight:700; margin:0 0 4px;">Media Bridge</h3>
-            <p style="font-size:13px; color:var(--text-secondary); margin:0;">Version <span id="about-version">—</span></p>
+            <p style="font-size:13px; color:var(--text-secondary); margin:0;"><span data-i18n="common.version">Version</span> <span id="about-version">—</span></p>
           </div>
-          <p style="font-size:14px; color:var(--text-secondary); margin:0;">
+          <p style="font-size:14px; color:var(--text-secondary); margin:0;" data-i18n="about.desc">
             Download HLS, DASH, and direct media streams directly from your browser.
           </p>
           <p style="font-size:14px; margin:0;">
-            Made with ♥ by
+            <span data-i18n="about.madeBy">Made with ♥ by</span>
             <a href="https://github.com/jvillegasd" target="_blank" rel="noopener noreferrer" style="color:var(--accent); text-decoration:none; font-weight:500;">jvillegasd</a>
           </p>
         </div>

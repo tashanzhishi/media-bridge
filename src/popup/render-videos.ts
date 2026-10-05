@@ -5,6 +5,7 @@
 import { DownloadState, DownloadStage, VideoMetadata, VideoFormat } from "../core/types";
 import { normalizeUrl } from "../core/utils/url-utils";
 import { MessageType } from "../shared/messages";
+import { t, translateRuntimeMessage } from "../shared/i18n";
 import { dom, detectedVideos, downloadStates } from "./state";
 import {
   escapeHtml,
@@ -58,7 +59,7 @@ function updateVideoCardProgress(card: HTMLElement, video: VideoMetadata): boole
     if (!sizeEl) return false;
     const segmentsCollected = downloadState.progress.segmentsCollected || 0;
     const downloaded = downloadState.progress.downloaded || 0;
-    sizeEl.textContent = `${segmentsCollected} segments \u2022 ${formatFileSize(downloaded)}`;
+    sizeEl.textContent = t("progress.segments", { count: segmentsCollected, size: formatFileSize(downloaded) });
     return true;
   }
 
@@ -94,7 +95,7 @@ function updateVideoCardProgress(card: HTMLElement, video: VideoMetadata): boole
     if (!bar || !sizeEl) return false;
 
     const percentage = Math.min(Math.max(downloadState.progress.percentage || 0, 0), 100);
-    const message = downloadState.progress.message || "Merging streams...";
+    const message = translateRuntimeMessage(downloadState.progress.message || t("downloads.merging"));
 
     bar.style.width = `${percentage}%`;
     sizeEl.textContent = message;
@@ -227,9 +228,9 @@ export function renderDetectedVideos(forceFullRebuild = false): void {
           <polygon points="23 7 16 12 23 17 23 7"></polygon>
           <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
         </svg>
-        <div class="empty-state-title">No videos detected</div>
-        <div class="empty-state-subtitle">Play a video on the page to detect it, or try force detection to refresh.</div>
-        <button class="primary-btn empty-state-action">Force Detection</button>
+        <div class="empty-state-title">${t("videos.empty")}</div>
+        <div class="empty-state-subtitle">${t("videos.emptyBody")}</div>
+        <button class="primary-btn empty-state-action">${t("videos.forceDetectionButton")}</button>
       </div>
     `;
     renderedVideoCards.clear();
@@ -329,18 +330,18 @@ function renderVideoItem(video: VideoMetadata): string {
 
   let statusBadge = "";
   let progressBar = "";
-  let buttonText = "Download";
+  let buttonText = t("videos.download");
   let buttonDisabled = false;
 
   const hasDrm = video.hasDrm === true;
   if (hasDrm) {
-    statusBadge = `<span class="video-status status-drm">DRM Protected</span>`;
+    statusBadge = `<span class="video-status status-drm">${t("videos.drmProtected")}</span>`;
     buttonDisabled = true;
   }
 
   const unsupported = video.unsupported === true;
   if (unsupported && !hasDrm) {
-    statusBadge = `<span class="video-status status-unsupported">Unsupported</span>`;
+    statusBadge = `<span class="video-status status-unsupported">${t("videos.unsupported")}</span>`;
     buttonDisabled = true;
   }
 
@@ -359,12 +360,12 @@ function renderVideoItem(video: VideoMetadata): string {
             <div class="manifest-progress-bar recording"></div>
           </div>
           <div class="manifest-progress-info">
-            <span class="manifest-progress-size">${segmentsCollected} segments &bull; ${downloadedText}</span>
-            <span class="rec-badge"><span class="rec-dot"></span>REC</span>
+            <span class="manifest-progress-size">${t("progress.segments", { count: segmentsCollected, size: downloadedText })}</span>
+            <span class="rec-badge"><span class="rec-dot"></span>${t("videos.rec")}</span>
           </div>
         </div>
         <div class="card-actions">
-          <button class="btn-stop-rec" data-url="${escapeHtml(video.url)}">Stop</button>
+          <button class="btn-stop-rec" data-url="${escapeHtml(video.url)}">${t("videos.stop")}</button>
         </div>
       `;
       buttonText = "";
@@ -398,11 +399,11 @@ function renderVideoItem(video: VideoMetadata): string {
           </div>
         </div>
         <div class="card-actions">
-          <button class="btn-stop-save" data-url="${escapeHtml(video.url)}">Stop &amp; Save</button>
+          <button class="btn-stop-save" data-url="${escapeHtml(video.url)}">${t("videos.stopAndSave")}</button>
         </div>
       `;
       } else if (stage === DownloadStage.MERGING) {
-        const message = downloadState.progress.message || "Merging streams...";
+        const message = translateRuntimeMessage(downloadState.progress.message || t("downloads.merging"));
         const mergingPercentage = Math.min(Math.max(percentage, 0), 100);
 
         progressBar = `
@@ -437,19 +438,19 @@ function renderVideoItem(video: VideoMetadata): string {
     buttonText = "";
     buttonDisabled = true;
   } else if (isCompleted) {
-    statusBadge = `<span class="video-status status-completed">Completed</span>`;
-    buttonText = "Redownload";
+    statusBadge = `<span class="video-status status-completed">${t("videos.completed")}</span>`;
+    buttonText = t("videos.redownload");
     buttonDisabled = false;
   } else if (isFailed) {
-    statusBadge = `<span class="video-status status-failed">Failed</span>`;
-    buttonText = "Retry";
+    statusBadge = `<span class="video-status status-failed">${t("videos.failed")}</span>`;
+    buttonText = t("videos.retry");
   }
 
   return `
     <div class="video-item">
       <div class="video-item-preview">
         ${video.thumbnail
-          ? `<img src="${escapeHtml(video.thumbnail)}" alt="Video preview" loading="lazy">`
+          ? `<img src="${escapeHtml(video.thumbnail)}" alt="${t("videos.previewAlt")}" loading="lazy">`
           : `<div class="no-thumbnail">${PLAY_ICON_SVG}</div>`
         }
       </div>
@@ -461,7 +462,7 @@ function renderVideoItem(video: VideoMetadata): string {
           ${statusBadge}
           <button class="btn-copy-url"
                   data-url="${escapeHtml(video.url)}"
-                  title="Copy URL">
+                  title="${t("videos.copyUrl")}">
             <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
           </button>
         </div>
@@ -485,15 +486,15 @@ function renderVideoItem(video: VideoMetadata): string {
             ${(video.format === VideoFormat.HLS || video.format === VideoFormat.M3U8) && !hasDrm && !unsupported ? `
               <button class="video-btn-manifest"
                       data-url="${escapeHtml(video.url)}"
-                      title="Select quality">
-                Select Quality
+                      title="${t("videos.selectQualityTitle")}">
+                ${t("videos.selectQuality")}
               </button>
             ` : ""}
             ${video.isLive ? `
               <button class="btn-rec"
                       data-url="${escapeHtml(video.url)}"
-                      title="Record live stream">
-                REC
+                      title="${t("videos.recordLiveTitle")}">
+                ${t("videos.rec")}
               </button>
             ` : ""}
           </div>
