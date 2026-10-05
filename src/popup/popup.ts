@@ -213,6 +213,8 @@ async function requestDetectedVideos(): Promise<void> {
           if (video.width && !existing.width) existing.width = video.width;
           if (video.height && !existing.height) existing.height = video.height;
           if (video.duration && !existing.duration) existing.duration = video.duration;
+          if (video.audioUrl && video.audioUrl !== existing.audioUrl) existing.audioUrl = video.audioUrl;
+          if (video.isMseStream && !existing.isMseStream) existing.isMseStream = true;
         }
       }
     }
@@ -259,6 +261,16 @@ function addDetectedVideo(video: VideoMetadata): void {
     if (video.width && !existing.width) { existing.width = video.width; updated = true; }
     if (video.height && !existing.height) { existing.height = video.height; updated = true; }
     if (video.duration && !existing.duration) { existing.duration = video.duration; updated = true; }
+    // Keep MSE stream info in sync — the audio track may be reported after the
+    // video track, and the download handler needs audioUrl to mux.
+    if (video.audioUrl && video.audioUrl !== existing.audioUrl) {
+      existing.audioUrl = video.audioUrl;
+      updated = true;
+    }
+    if (video.isMseStream && !existing.isMseStream) {
+      existing.isMseStream = true;
+      updated = true;
+    }
 
     if (updated) {
       renderDetectedVideos();

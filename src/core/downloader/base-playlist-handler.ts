@@ -11,7 +11,7 @@ import { getDownload, storeDownload } from "../database/downloads";
 import { DownloadState, Fragment, DownloadStage } from "../types";
 import { logger } from "../utils/logger";
 import { decryptFragment } from "./crypto-utils";
-import { fetchArrayBuffer, fetchText } from "../utils/fetch-utils";
+import { fetchArrayBuffer, fetchResource, fetchText } from "../utils/fetch-utils";
 import { storeChunk, deleteChunks, getChunkCount } from "../database/chunks";
 import { sanitizeFilename } from "../utils/file-utils";
 import { formatFileSize } from "../utils/format-utils";
@@ -284,6 +284,67 @@ export abstract class BasePlaylistHandler {
 
     await storeChunk(downloadId, fragment.index, decryptedData);
     return decryptedData.byteLength;
+  }
+
+  /**
+   * Start a cancellable fetch and resolve as soon as the response headers are
+   * available (the body is streamed by {@link consumeResponseToChunk}).
+   */
+  protected async fetchResponse(url: string): Promise<Response> {
+    if (!this.abortSignal) {
+      throw new Error("AbortSignal is required for fragment download");
+    }
+    return cancelIfAborted(
+      fetchResource(url, { signal: this.abortSignal }),
+      this.abortSignal,
+    );
+  }
+
+  /**
+   * Read a response body to completion, reporting progress as bytes arrive, and
+   * store the result as a single chunk.
+   *
+   * Used for MSE/DASH streams where a whole track is fetched in one request — a
+   * plain `arrayBuffer()` would leave the UI frozen until the request finished.
+   */
+  protected async consumeResponseToChunk(
+    response: Response,
+    downloadId: string,
+    chunkIndex: number,
+    onBytes: (bytesReceived: number) => Promise<void>,
+  ): Promise<number> {
+    const reader = response.body?.getReader();
+
+    if (!reader) {
+      const data = await response.arrayBuffer();
+      await storeChunk(downloadId, chunkIndex, data);
+      await onBytes(data.byteLength);
+      return data.byteLength;
+    }
+
+    const parts: Uint8Array[] = [];
+    let received = 0;
+
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (!value) continue;
+
+      parts.push(value);
+      received += value.byteLength;
+      await onBytes(received);
+      throwIfAborted(this.abortSignal);
+    }
+
+    const merged = new Uint8Array(received);
+    let offset = 0;
+    for (const part of parts) {
+      merged.set(part, offset);
+      offset += part.byteLength;
+    }
+
+    await storeChunk(downloadId, chunkIndex, merged.buffer);
+    return received;
   }
 
   protected async downloadAllFragments(

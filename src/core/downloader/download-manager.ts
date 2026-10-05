@@ -196,15 +196,27 @@ export class DownloadManager {
           metadata.pageUrl,
         );
       } else if (format === VideoFormat.DASH) {
-        // Use DASH download handler
-        await this.dashDownloadHandler.download(
-          actualVideoUrl,
-          filename,
-          state.id,
-          abortSignal,
-          metadata.pageUrl,
-          manifestQuality?.selectedBandwidth,
-        );
+        if (metadata.isMseStream) {
+          // MSE/DASH streams sniffed from segment requests (no manifest file)
+          await this.dashDownloadHandler.downloadSegmentStream(
+            actualVideoUrl,
+            metadata.audioUrl,
+            filename,
+            state.id,
+            abortSignal,
+            metadata.pageUrl,
+          );
+        } else {
+          // Use DASH download handler
+          await this.dashDownloadHandler.download(
+            actualVideoUrl,
+            filename,
+            state.id,
+            abortSignal,
+            metadata.pageUrl,
+            manifestQuality?.selectedBandwidth,
+          );
+        }
       } else {
         throw new Error(`Unsupported format: ${format}`);
       }

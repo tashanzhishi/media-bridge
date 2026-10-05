@@ -26,6 +26,10 @@ import { detectFormatFromUrl } from "../utils/url-utils";
 import { DirectDetectionHandler } from "./direct/direct-detection-handler";
 import { HlsDetectionHandler } from "./hls/hls-detection-handler";
 import { DashDetectionHandler } from "./dash/dash-detection-handler";
+import {
+  MseSegmentDetectionHandler,
+  SegmentRequestInfo,
+} from "./dash/mse-segment-detection-handler";
 
 /** Configuration options for DetectionManager */
 export interface DetectionManagerOptions {
@@ -37,6 +41,13 @@ export interface DetectionManagerOptions {
   detectionCacheSize?: number;
   /** Max master playlists held in memory by HLS handler (default: 50) */
   masterPlaylistCacheSize?: number;
+  /**
+   * Whether to sniff MSE/DASH segment requests. Disabled on sites that expose
+   * exact stream info directly (e.g. bilibili), where sniffing would only
+   * produce duplicate or incorrect entries.
+   * @default true
+   */
+  mseSniffingEnabled?: boolean;
 }
 
 /**
@@ -49,6 +60,8 @@ export class DetectionManager {
   public readonly directHandler: DirectDetectionHandler;
   private hlsHandler: HlsDetectionHandler;
   private dashHandler: DashDetectionHandler;
+  private mseHandler: MseSegmentDetectionHandler;
+  private readonly mseSniffingEnabled: boolean;
 
   /**
    * Create a new DetectionManager instance
@@ -57,6 +70,7 @@ export class DetectionManager {
   constructor(options: DetectionManagerOptions = {}) {
     this.onVideoDetected = options.onVideoDetected;
     this.onVideoRemoved = options.onVideoRemoved;
+    this.mseSniffingEnabled = options.mseSniffingEnabled ?? true;
     this.directHandler = new DirectDetectionHandler({
       onVideoDetected: (video) => this.handleVideoDetected(video),
     });
@@ -70,36 +84,47 @@ export class DetectionManager {
       onVideoDetected: (video) => this.handleVideoDetected(video),
       detectionCacheSize: options.detectionCacheSize,
     });
+    this.mseHandler = new MseSegmentDetectionHandler({
+      onVideoDetected: (video) => this.handleVideoDetected(video),
+      onVideoRemoved: (url) => this.handleVideoRemoved(url),
+    });
   }
 
   /**
    * Detect videos from network request
    * Routes to format-specific handler based on URL format
    */
-  handleNetworkRequest(url: string): void {
+  handleNetworkRequest(url: string, info?: SegmentRequestInfo): void {
     const format = detectFormatFromUrl(url);
 
-    switch (format) {
-      case VideoFormat.DIRECT:
-        logger.debug("[Media Bridge] Direct video detected", { url });
-        this.directHandler.handleNetworkRequest(url);
-        break;
-
-      case VideoFormat.HLS:
-        logger.debug("[Media Bridge] HLS video detected", { url });
-        this.hlsHandler.handleNetworkRequest(url);
-        break;
-
-      case VideoFormat.DASH:
-        logger.debug("[Media Bridge] DASH video detected", { url });
-        this.dashHandler.handleNetworkRequest(url);
-        break;
-
-      default:
-        // Reject unknown formats - don't process them
-        logger.debug("[Media Bridge] Unknown format detected", { url });
-        break;
+    if (format === VideoFormat.HLS) {
+      logger.debug("[Media Bridge] HLS video detected", { url });
+      this.hlsHandler.handleNetworkRequest(url);
+      return;
     }
+
+    if (format === VideoFormat.DASH) {
+      logger.debug("[Media Bridge] DASH video detected", { url });
+      this.dashHandler.handleNetworkRequest(url);
+      return;
+    }
+
+    // MSE/DASH segment requests (no manifest) — generic fallback for sites that
+    // do not expose their stream info directly.
+    if (this.mseSniffingEnabled && info && this.mseHandler.isSegmentRequest(info)) {
+      logger.debug("[Media Bridge] MSE segment detected", { url });
+      this.mseHandler.handleRequest(info);
+      return;
+    }
+
+    if (format === VideoFormat.DIRECT) {
+      logger.debug("[Media Bridge] Direct video detected", { url });
+      this.directHandler.handleNetworkRequest(url);
+      return;
+    }
+
+    // Reject unknown formats - don't process them
+    logger.debug("[Media Bridge] Unknown format detected", { url });
   }
 
   /**
@@ -121,6 +146,7 @@ export class DetectionManager {
     this.directHandler.destroy();
     this.hlsHandler.destroy();
     this.dashHandler.destroy();
+    this.mseHandler.destroy();
   }
 
   /**

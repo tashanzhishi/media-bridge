@@ -6,6 +6,7 @@
 import { MessageType } from "./shared/messages";
 import { VideoMetadata, VideoFormat, StorageConfig } from "./core/types";
 import { DetectionManager } from "./core/detection/detection-manager";
+import { extractThumbnail } from "./core/detection/thumbnail-utils";
 import { normalizeUrl } from "./core/utils/url-utils";
 import { logger } from "./core/utils/logger";
 import { STORAGE_CONFIG_KEY } from "./shared/constants";
@@ -15,6 +16,81 @@ let detectionManager: DetectionManager;
 let sentToPopup = new Set<string>();
 let lastUrl = location.href;
 const inIframe = window.self !== window.top;
+
+/** Message source used by the bilibili MAIN-world script. */
+const BILIBILI_PLAYINFO_SOURCE = "media-bridge-bilibili-playinfo";
+/** bilibili exposes exact stream URLs, so request sniffing is unnecessary there. */
+const isBilibiliHost = /(^|\.)bilibili\.com$/i.test(location.hostname);
+
+interface BilibiliTrack {
+  baseUrl?: string;
+  id?: number;
+  bandwidth?: number;
+  width?: number;
+  height?: number;
+}
+
+interface BilibiliPlayInfo {
+  video?: BilibiliTrack[];
+  audio?: BilibiliTrack[];
+}
+
+/** Highest-resolution video rendition from the play info. */
+function pickBestVideoTrack(tracks: BilibiliTrack[]): BilibiliTrack | undefined {
+  return tracks
+    .filter((t) => t.baseUrl)
+    .sort((a, b) => (b.height ?? 0) - (a.height ?? 0) || (b.bandwidth ?? 0) - (a.bandwidth ?? 0))[0];
+}
+
+/** Highest-bitrate audio rendition from the play info. */
+function pickBestAudioTrack(tracks?: BilibiliTrack[]): BilibiliTrack | undefined {
+  return (tracks ?? [])
+    .filter((t) => t.baseUrl)
+    .sort((a, b) => (b.bandwidth ?? 0) - (a.bandwidth ?? 0))[0];
+}
+
+/**
+ * Build a DASH entry from bilibili's own play info. Unlike request sniffing this
+ * reliably separates the video and audio tracks (both are served as video/mp4).
+ */
+function handleBilibiliPlayInfo(info: BilibiliPlayInfo): void {
+  const video = pickBestVideoTrack(info.video ?? []);
+  if (!video?.baseUrl) return;
+
+  const audio = pickBestAudioTrack(info.audio);
+
+  const metadata: VideoMetadata = {
+    url: video.baseUrl,
+    audioUrl: audio?.baseUrl,
+    format: VideoFormat.DASH,
+    isMseStream: true,
+    fileExtension: "mp4",
+    pageUrl: window.location.href,
+    title: document.title,
+  };
+
+  if (video.width) metadata.width = video.width;
+  if (video.height) {
+    const height = video.height;
+    metadata.height = height;
+    if (height >= 2160) metadata.resolution = "4K";
+    else if (height >= 1440) metadata.resolution = "1440p";
+    else if (height >= 1080) metadata.resolution = "1080p";
+    else if (height >= 720) metadata.resolution = "720p";
+    else if (height >= 480) metadata.resolution = "480p";
+    else metadata.resolution = `${height}p`;
+  }
+
+  const videoElement = document.querySelector("video");
+  if (videoElement?.duration && Number.isFinite(videoElement.duration)) {
+    metadata.duration = videoElement.duration;
+  }
+
+  const thumbnail = extractThumbnail(videoElement ?? undefined);
+  if (thumbnail) metadata.thumbnail = thumbnail;
+
+  addDetectedVideo(metadata);
+}
 
 /**
  * Send message to popup with error handling for extension context invalidation
@@ -116,6 +192,14 @@ function addDetectedVideo(video: VideoMetadata) {
       existing.resolution = video.resolution;
       updated = true;
     }
+    if (video.audioUrl && video.audioUrl !== existing.audioUrl) {
+      existing.audioUrl = video.audioUrl;
+      updated = true;
+    }
+    if (video.isMseStream && !existing.isMseStream) {
+      existing.isMseStream = true;
+      updated = true;
+    }
 
     if (
       video.url !== existing.url &&
@@ -179,6 +263,9 @@ async function init() {
     },
     detectionCacheSize: config?.advanced?.detectionCacheSize,
     masterPlaylistCacheSize: config?.advanced?.masterPlaylistCacheSize,
+    // bilibili provides exact stream info; request sniffing there only produces
+    // incorrect/duplicate entries (its audio track is served as video/mp4).
+    mseSniffingEnabled: !isBilibiliHost,
   });
 
   // Initialize all detection mechanisms
@@ -252,8 +339,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       // Handle URL detected from service worker network interceptor
       const url = message.payload?.url;
       if (url && detectionManager) {
-        // Process URL through detection manager
-        detectionManager.handleNetworkRequest(url);
+        // Process URL through detection manager (with response info for MSE sniffing)
+        detectionManager.handleNetworkRequest(url, {
+          url,
+          contentType: message.payload?.contentType,
+          contentRange: message.payload?.contentRange,
+          statusCode: message.payload?.statusCode,
+        });
       }
       return false; // No response needed
     }
@@ -262,6 +354,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   } catch (error) {
     console.debug("Error handling message:", error);
     return false;
+  }
+});
+
+// Receive play info captured by the bilibili MAIN-world content script
+window.addEventListener("message", (event) => {
+  if (event.source !== window) return;
+  const data = event.data as { source?: string; payload?: BilibiliPlayInfo } | null;
+  if (!data || data.source !== BILIBILI_PLAYINFO_SOURCE) return;
+  try {
+    handleBilibiliPlayInfo(data.payload ?? {});
+  } catch (error) {
+    console.debug("Error handling bilibili play info:", error);
   }
 });
 

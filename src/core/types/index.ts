@@ -26,6 +26,15 @@ export interface VideoMetadata {
   hasDrm?: boolean; // Indicates if the video is DRM-protected
   unsupported?: boolean; // Indicates if the manifest uses unsupported encryption methods
   isLive?: boolean; // Indicates if the stream is a live stream (no #EXT-X-ENDLIST)
+  /**
+   * Second media track URL for MSE/DASH streams detected by segment sniffing
+   * (video and audio are delivered as independent streams, no manifest file).
+   * Usually the audio track, but FFmpeg picks the best video/audio stream across
+   * both inputs, so it does not matter which of the two is which.
+   */
+  audioUrl?: string;
+  /** True when the source was detected by MSE segment sniffing rather than a manifest. */
+  isMseStream?: boolean;
 }
 
 export interface VideoQuality {

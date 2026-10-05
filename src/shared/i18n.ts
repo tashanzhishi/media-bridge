@@ -141,6 +141,9 @@ export function translateRuntimeMessage(message: string): string {
     "Writing audio stream": "progress.writeAudioStream",
     "Writing media stream": "progress.writeMediaStream",
     "Merging video and audio": "progress.mergingStreams",
+    "Merging DASH streams...": "progress.mergingDashStreams",
+    "Downloading video stream...": "progress.downloadingVideoStream",
+    "Downloading audio stream...": "progress.downloadingAudioStream",
     "Converting to MP4": "progress.convertingMp4",
     "Done": "progress.done",
     "Cannot cancel download during merging or saving phase. Chunks are already downloaded and processing is in progress.":

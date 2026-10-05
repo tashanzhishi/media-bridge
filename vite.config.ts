@@ -158,6 +158,36 @@ export default defineConfig(({ mode }) => {
               },
               plugins: [], // No plugins to avoid recursion
             });
+
+            // Build the bilibili MAIN-world content script as IIFE
+            await viteBuild({
+              configFile: false,
+              build: {
+                outDir: resolve(__dirname, 'dist'),
+                emptyOutDir: false,
+                rollupOptions: {
+                  input: resolve(__dirname, 'src/content-bilibili-main.ts'),
+                  output: {
+                    format: 'iife',
+                    entryFileNames: 'content-bilibili-main.js',
+                    inlineDynamicImports: true,
+                  },
+                },
+                minify: isProduction,
+                sourcemap: !isProduction,
+                target: 'es2020',
+              },
+              resolve: {
+                alias: {
+                  '@': resolve(__dirname, './src'),
+                },
+                extensions: ['.ts', '.tsx', '.js'],
+              },
+              optimizeDeps: {
+                exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util'],
+              },
+              plugins: [], // No plugins to avoid recursion
+            });
           } finally {
             (globalThis as any).__buildingContentScript = false;
           }
@@ -176,4 +206,3 @@ export default defineConfig(({ mode }) => {
     },
   };
 });
-

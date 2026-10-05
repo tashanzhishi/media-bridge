@@ -32,6 +32,23 @@ import {
   getAudioPlaylist,
 } from "../../parsers/mpd-parser";
 
+/** Minimum interval between progress updates while streaming whole tracks. */
+const PROGRESS_REPORT_INTERVAL_MS = 200;
+
+/** Total resource size from Content-Length / Content-Range, or 0 if unknown. */
+function responseContentLength(response: Response): number {
+  const contentLength = Number(response.headers.get("content-length"));
+  if (Number.isFinite(contentLength) && contentLength > 0) return contentLength;
+
+  const contentRange = response.headers.get("content-range");
+  const match = contentRange?.match(/\/(\d+)\s*$/);
+  if (match) {
+    const total = Number(match[1]);
+    if (Number.isFinite(total) && total > 0) return total;
+  }
+  return 0;
+}
+
 export class DashDownloadHandler extends BasePlaylistHandler {
   private videoLength: number = 0;
   private audioLength: number = 0;
@@ -185,6 +202,159 @@ export class DashDownloadHandler extends BasePlaylistHandler {
         }
       }
       logger.error("DASH download failed:", error);
+      throw error;
+    } finally {
+      await this.tryRemoveHeaderRules(headerRuleIds);
+      await this.cleanupChunks(this.downloadId || stateId);
+      await this.cleanupChunks((this.downloadId || stateId) + "_a");
+    }
+  }
+
+  /**
+   * Download an MSE/DASH stream captured by segment sniffing (no manifest).
+   *
+   * Video and audio are independent media streams; each is fetched once in full
+   * and stored as a single fragment (index 0), then muxed by the offscreen
+   * FFmpeg worker using the existing DASH video+audio path.
+   */
+  async downloadSegmentStream(
+    videoUrl: string,
+    audioUrl: string | undefined,
+    filename: string,
+    stateId: string,
+    abortSignal?: AbortSignal,
+    pageUrl?: string,
+  ): Promise<{ filePath: string; fileExtension?: string }> {
+    this.resetDownloadState(stateId, abortSignal);
+    const audioId = this.downloadId + "_a";
+
+    const headerRuleIds = [
+      ...(await this.tryAddHeaderRules(stateId, videoUrl, pageUrl)),
+      ...(audioUrl
+        ? await this.tryAddHeaderRules(stateId + "_a", audioUrl, pageUrl)
+        : []),
+    ];
+
+    try {
+      logger.info(`Starting MSE/DASH segment download: ${videoUrl}`);
+
+      // Open both requests first so their sizes are known up front, then stream
+      // them concurrently while reporting combined progress. Without this the UI
+      // would sit at 0% until the whole track finished downloading.
+      const videoResponse = await this.fetchResponse(videoUrl);
+      const audioResponse = audioUrl ? await this.fetchResponse(audioUrl) : null;
+
+      const videoTotal = responseContentLength(videoResponse);
+      const audioTotal = audioResponse ? responseContentLength(audioResponse) : 0;
+      const grandTotal = videoTotal + audioTotal;
+
+      let videoDone = 0;
+      let audioDone = 0;
+      let lastReportAt = 0;
+
+      const report = async (force = false): Promise<void> => {
+        if (!force && Date.now() - lastReportAt < PROGRESS_REPORT_INTERVAL_MS) return;
+        lastReportAt = Date.now();
+        await this.updateProgress(
+          stateId,
+          videoDone + audioDone,
+          grandTotal > 0 ? grandTotal : 0,
+        );
+      };
+
+      await this.updateProgress(stateId, 0, grandTotal > 0 ? grandTotal : 0);
+
+      const downloads: Array<Promise<number>> = [
+        this.consumeResponseToChunk(videoResponse, this.downloadId, 0, async (bytes) => {
+          videoDone = bytes;
+          await report();
+        }),
+      ];
+
+      if (audioResponse) {
+        downloads.push(
+          this.consumeResponseToChunk(audioResponse, audioId, 0, async (bytes) => {
+            audioDone = bytes;
+            await report();
+          }),
+        );
+      }
+
+      await Promise.all(downloads);
+
+      this.videoLength = 1;
+      this.audioLength = audioResponse ? 1 : 0;
+
+      throwIfAborted(this.abortSignal);
+
+      await report(true);
+      await this.updateStage(stateId, DownloadStage.MERGING, "Merging DASH streams...");
+
+      const baseFileName = this.sanitizeBaseFilename(filename);
+
+      const { blobUrl, warning } = await processWithFFmpeg({
+        requestType: MessageType.OFFSCREEN_PROCESS_DASH,
+        responseType: MessageType.OFFSCREEN_PROCESS_DASH_RESPONSE,
+        downloadId: this.downloadId,
+        payload: {
+          videoLength: this.videoLength,
+          audioLength: this.audioLength,
+          audioDownloadId: this.audioLength > 0 ? audioId : undefined,
+        },
+        filename: baseFileName,
+        timeout: this.ffmpegTimeout,
+        abortSignal: this.abortSignal,
+        onProgress: this.createMergingProgressCallback(stateId),
+      });
+
+      await this.updateStage(
+        stateId,
+        DownloadStage.SAVING,
+        "Saving file...",
+        SAVING_STAGE_PERCENTAGE,
+      );
+
+      const filePath = await saveBlobUrlToFile(
+        blobUrl,
+        `${baseFileName}.mp4`,
+        stateId,
+      );
+      const completionMessage = warning
+        ? `Download completed — ${warning}`
+        : "Download completed";
+      await this.markCompleted(stateId, filePath, completionMessage);
+
+      logger.info(`MSE/DASH segment download completed: ${filePath}`);
+      return { filePath, fileExtension: "mp4" };
+    } catch (error) {
+      if (error instanceof CancellationError && this.shouldSaveOnCancel?.()) {
+        try {
+          const videoChunkCount = await getChunkCount(this.downloadId);
+          const audioChunkCount =
+            this.audioLength > 0 ? await getChunkCount(audioId) : 0;
+          this.videoLength = Math.min(videoChunkCount, this.videoLength);
+          this.audioLength = Math.min(audioChunkCount, this.audioLength);
+
+          if (this.videoLength > 0) {
+            const result = await this.savePartialDownload(stateId, filename, {
+              requestType: MessageType.OFFSCREEN_PROCESS_DASH,
+              responseType: MessageType.OFFSCREEN_PROCESS_DASH_RESPONSE,
+              payload: {
+                videoLength: this.videoLength,
+                audioLength: this.audioLength,
+                audioDownloadId: this.audioLength > 0 ? audioId : undefined,
+              },
+            });
+            logger.info(`MSE/DASH partial download saved: ${result.filePath}`);
+            return result;
+          }
+        } catch (saveError) {
+          if (!(saveError instanceof CancellationError)) {
+            logger.error("Failed to save partial MSE/DASH download:", saveError);
+          }
+        }
+      }
+      logger.error("MSE/DASH segment download failed:", error);
       throw error;
     } finally {
       await this.tryRemoveHeaderRules(headerRuleIds);

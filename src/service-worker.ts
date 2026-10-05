@@ -342,6 +342,65 @@ async function handleFetchResourceMessage(payload: {
   }
 }
 
+/** Read a single response header value (case-insensitive). */
+function getResponseHeader(
+  headers: chrome.webRequest.HttpHeader[] | undefined,
+  name: string,
+): string | undefined {
+  if (!headers) return undefined;
+  const lower = name.toLowerCase();
+  const match = headers.find((h) => h.name?.toLowerCase() === lower);
+  return match?.value;
+}
+
+/** Segment/playlist extensions we forward to content scripts. */
+const MEDIA_SEGMENT_PATH_RE = /\.(m3u8|mpd|m4s|m4a|mp4)$/i;
+
+/**
+ * Decide whether a completed request should be forwarded for detection.
+ * `.mp4` requires a media Content-Type so plain XHRs are not misclassified.
+ */
+function isDetectableMediaRequest(url: string, contentType: string): boolean {
+  let pathname = url;
+  try {
+    pathname = new URL(url).pathname;
+  } catch {
+    // keep raw url
+  }
+
+  if (!MEDIA_SEGMENT_PATH_RE.test(pathname)) return false;
+
+  if (pathname.toLowerCase().endsWith(".mp4")) {
+    const ct = contentType.toLowerCase();
+    return ct.startsWith("video/") || ct.startsWith("audio/");
+  }
+
+  return true;
+}
+
+/**
+ * Per-tab set of URLs already forwarded, to avoid message storms on
+ * segment-heavy MSE sites (the same URL is requested repeatedly for byte ranges).
+ */
+const forwardedSegmentUrls = new Map<number, Set<string>>();
+const MAX_FORWARDED_URLS_PER_TAB = 1_000;
+
+function shouldForwardSegmentUrl(tabId: number, url: string): boolean {
+  let seen = forwardedSegmentUrls.get(tabId);
+  if (!seen) {
+    seen = new Set();
+    forwardedSegmentUrls.set(tabId, seen);
+  }
+  if (seen.has(url)) return false;
+  if (seen.size >= MAX_FORWARDED_URLS_PER_TAB) seen.clear();
+  seen.add(url);
+  return true;
+}
+
+chrome.tabs.onRemoved.addListener((tabId) => {
+  forwardedSegmentUrls.delete(tabId);
+});
+
 /**
  * Set up network interceptor to detect video URLs
  * Intercepts completed network requests and sends valid video URLs to content scripts
@@ -350,29 +409,35 @@ async function handleFetchResourceMessage(payload: {
 chrome.webRequest.onCompleted.addListener(
   (details) => {
     const url = details.url;
-    logger.info(`Network request completed: ${url}`);
-    // Detect if this is a video URL
-    const format = detectFormatFromUrl(url);
-    if (format === VideoFormat.UNKNOWN) {
-      return;
-    }
 
     // Send URL to content script in the tab that made the request
-    if (details.tabId && details.tabId > 0) {
-      chrome.tabs.sendMessage(
-        details.tabId,
-        {
-          type: MessageType.NETWORK_URL_DETECTED,
-          payload: { url },
+    if (!details.tabId || details.tabId <= 0) return;
+
+    const contentType = getResponseHeader(details.responseHeaders, "content-type") ?? "";
+    if (!isDetectableMediaRequest(url, contentType)) return;
+
+    if (!shouldForwardSegmentUrl(details.tabId, url)) return;
+
+    logger.debug(`Network request completed: ${url}`);
+
+    chrome.tabs.sendMessage(
+      details.tabId,
+      {
+        type: MessageType.NETWORK_URL_DETECTED,
+        payload: {
+          url,
+          contentType,
+          contentRange: getResponseHeader(details.responseHeaders, "content-range"),
+          statusCode: details.statusCode,
         },
-        (response) => {
-          // Check for errors to prevent "unchecked runtime.lastError" warning
-          if (chrome.runtime.lastError) {
-            // Ignore - content script might not be available or tab closed
-          }
-        },
-      );
-    }
+      },
+      () => {
+        // Check for errors to prevent "unchecked runtime.lastError" warning
+        if (chrome.runtime.lastError) {
+          // Ignore - content script might not be available or tab closed
+        }
+      },
+    );
   },
   {
     urls: [
@@ -384,6 +449,18 @@ chrome.webRequest.onCompleted.addListener(
       "https://*/*.mpd",
       "http://*/*.mpd?*",
       "https://*/*.mpd?*",
+      "http://*/*.m4s",
+      "https://*/*.m4s",
+      "http://*/*.m4s?*",
+      "https://*/*.m4s?*",
+      "http://*/*.m4a",
+      "https://*/*.m4a",
+      "http://*/*.m4a?*",
+      "https://*/*.m4a?*",
+      "http://*/*.mp4",
+      "https://*/*.mp4",
+      "http://*/*.mp4?*",
+      "https://*/*.mp4?*",
     ],
     types: ["xmlhttprequest"],
   },
